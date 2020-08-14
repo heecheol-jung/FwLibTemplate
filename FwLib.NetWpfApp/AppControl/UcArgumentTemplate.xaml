@@ -1,0 +1,21 @@
+﻿<UserControl x:Class="FwLib.NetWpfApp.AppControl.UcArgumentTemplate"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FwLib.NetWpfApp.AppControl"
+             mc:Ignorable="d" 
+             d:DesignHeight="50" d:DesignWidth="400" BorderBrush="Black" BorderThickness="1">
+    <Grid Margin="1">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <Label x:Name="LblArgName" Grid.Row="0" Grid.Column="0" Content="Argument"/>
+        <TextBox x:Name="TbArgValue" Grid.Row="0" Grid.Column="1" Margin="1"/>
+    </Grid>
+</UserControl>

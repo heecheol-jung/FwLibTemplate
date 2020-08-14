@@ -150,6 +150,7 @@ namespace FwLib.NetWpfApp
                     {
                         BtnOpenClose.Content = AppConstant.STR_OPEN;
                         BtnSendMessage.IsEnabled = false;
+                        _msgManager = null;
                     }
                     else if (_msgManager.StartStatus == StartStatus.Started)
                     {

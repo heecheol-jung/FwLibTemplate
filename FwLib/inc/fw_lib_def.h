@@ -4,6 +4,7 @@
 #define FW_LIB_DEF_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 #define FW_LIB_BEGIN_DECLS              extern "C" {
@@ -27,6 +28,17 @@
 #define FW_LIB_DECLARE_NONSTD(type)     __declspec(dllimport) type __cdecl
 #define FW_LIB_DECLARE_DATA             __declspec(dllimport)
 #endif
+
+#elif defined(__GNUC__)
+// GNUC start
+// Nordic semiconductor : nRF5_SDK_xxx\component\802_15_4\api\SysAL\sys_utils.h
+#define FW_LIB_BEGIN_PACK1            _Pragma("pack(push, 1)")
+#define FW_LIB_END_PACK               _Pragma("pack(pop)")
+
+#define FW_LIB_DECLARE(type)          type
+#define FW_LIB_DECLARE_NONSTD(type)   type
+#define FW_LIB_DECLARE_DATA
+// GNUC end
 
 #else // WIN32 end
 

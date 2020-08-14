@@ -6,17 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace FwLib.NetWpfApp
@@ -366,9 +357,9 @@ namespace FwLib.NetWpfApp
                         }
                         else if (evt.MessageType == FwLibMessageType.Text)
                         {
-                            if (evt.Arguments?.Count == 3)
+                            if (evt.Arguments?.Count == 2)
                             {
-                                message = $"E : {(string)evt.Arguments[1]}.{(string)evt.Arguments[2]}";
+                                message = $"E : {(byte)evt.Arguments[0]}.{(byte)evt.Arguments[1]}";
 
                             }
                             else
@@ -455,9 +446,9 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 3)
+                            if (result.Response.Arguments?.Count == 2)
                             {
-                                response = $"R : {(string)result.Response.Arguments[2]}";
+                                response = $"R : {(string)result.Response.Arguments[1]}";
                             }
                             else
                             {
@@ -530,9 +521,9 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 3)
+                            if (result.Response.Arguments?.Count == 2)
                             {
-                                response = $"R : {(string)result.Response.Arguments[2]}";
+                                response = $"R : {(string)result.Response.Arguments[1]}";
                             }
                             else
                             {

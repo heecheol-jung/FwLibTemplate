@@ -26,6 +26,13 @@ namespace FwLib.NetWpfApp.AppUtil
         public FwLibEventReceived OnEventReceived { get ; set ; }
         #endregion
 
+        #region Constructors
+        public TxtMessageManager()
+        {
+            _logger = LogManager.GetLogger(typeof(TxtMessageManager));
+        }
+        #endregion
+
         #region Public Methods
         public void Start(MessageManagerSetting setting)
         {
@@ -232,7 +239,7 @@ namespace FwLib.NetWpfApp.AppUtil
                                         break;
 
                                     case FwLibMessageCategory.Event:
-                                        FwLibBinMessageEvent evt = (FwLibBinMessageEvent)parsedMessage;
+                                        FwLibTxtMessageEvent evt = (FwLibTxtMessageEvent)parsedMessage;
                                         OnEventReceived?.Invoke(this, evt);
                                         break;
                                 }
@@ -252,7 +259,7 @@ namespace FwLib.NetWpfApp.AppUtil
             IFwLibMessage response = null;
             IFwLibMessage message = (IFwLibMessage)command;
 
-            FwLibBinPacketBuilder.BuildMessagePacket(ref message);
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
             lock (_generalLock)
             {
                 _commandQ.Add(command);

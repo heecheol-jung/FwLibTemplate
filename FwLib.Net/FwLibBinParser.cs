@@ -331,63 +331,83 @@ namespace FwLib.Net
             FwLibMessageId messageId = (FwLibMessageId)header.MessageId;
 
             //message = null;
-
-            switch (messageId)
+            if (header.Error == FwLibConstant.OK)
             {
-                case FwLibMessageId.ReadHardwareVersion:
-                    {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 11);
-                        FwLibBinMessageReadHwVerResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHwVerResponseStruct>(_bufPtr);
-                        if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
-                            (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                switch (messageId)
+                {
+                    case FwLibMessageId.ReadHardwareVersion:
                         {
-                            arguments = new List<object>()
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, 11);
+                            FwLibBinMessageReadHwVerResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHwVerResponseStruct>(_bufPtr);
+                            if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                                (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
-                                msg.HwVersion.Major,
-                                msg.HwVersion.Minor,
-                                msg.HwVersion.Revision
-                            };
-                            ret = true;
+                                arguments = new List<object>()
+                                {
+                                    msg.HwVersion.Major,
+                                    msg.HwVersion.Minor,
+                                    msg.HwVersion.Revision
+                                };
+                                ret = true;
+                            }
                         }
-                    }
-                    break;
+                        break;
 
-                case FwLibMessageId.ReadFirmwareVersion:
-                    {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 11);
-                        FwLibBinMessageReadFwVerResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadFwVerResponseStruct>(_bufPtr);
-                        if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
-                            (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                    case FwLibMessageId.ReadFirmwareVersion:
                         {
-                            arguments = new List<object>()
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, 11);
+                            FwLibBinMessageReadFwVerResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadFwVerResponseStruct>(_bufPtr);
+                            if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                                (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
-                                msg.FwVersion.Major,
-                                msg.FwVersion.Minor,
-                                msg.FwVersion.Revision
-                            };
-                            ret = true;
+                                arguments = new List<object>()
+                                {
+                                    msg.FwVersion.Major,
+                                    msg.FwVersion.Minor,
+                                    msg.FwVersion.Revision
+                                };
+                                ret = true;
+                            }
                         }
-                    }
-                    break;
+                        break;
 
-                case FwLibMessageId.ReadGpio:
-                    {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 9);
-                        FwLibBinMessageReadGpioResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadGpioResponseStruct>(_bufPtr);
-                        if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
-                            (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                    case FwLibMessageId.ReadGpio:
                         {
-                            arguments = new List<object>()
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, 9);
+                            FwLibBinMessageReadGpioResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadGpioResponseStruct>(_bufPtr);
+                            if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                                (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
-                                msg.GpioValue
-                            };
-                            ret = true;
+                                arguments = new List<object>()
+                                {
+                                    msg.GpioValue
+                                };
+                                ret = true;
+                            }
                         }
-                    }
-                    break;
+                        break;
 
-                case FwLibMessageId.WriteGpio:
-                    {
+                    case FwLibMessageId.WriteGpio:
+                        {
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, 8);
+                            FwLibBinMessageStruct msg = Marshal.PtrToStructure<FwLibBinMessageStruct>(_bufPtr);
+                            if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                                (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                            {
+                                ret = true;
+                            }
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                switch (messageId)
+                {
+                    case FwLibMessageId.ReadHardwareVersion:
+                    case FwLibMessageId.ReadFirmwareVersion:
+                    case FwLibMessageId.ReadGpio:
+                    case FwLibMessageId.WriteGpio:
                         _crc16 = FwLibUtil.CRC16(_buf, 1, 8);
                         FwLibBinMessageStruct msg = Marshal.PtrToStructure<FwLibBinMessageStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
@@ -395,8 +415,8 @@ namespace FwLib.Net
                         {
                             ret = true;
                         }
-                    }
-                    break;
+                        break;
+                }
             }
 
             if (ret == true)

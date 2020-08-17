@@ -141,7 +141,7 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
 		}
 
-		TEST_METHOD(TestReadHardwareVersionResponseMessageBuild)
+		TEST_METHOD(TestReadHardwareVersionOkResponseMessageBuild)
 		{
 			fw_bin_msg_read_hw_ver_resp_t* resp = (fw_bin_msg_read_hw_ver_resp_t*)&_packet_buf[1];
 
@@ -191,6 +191,49 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[14], L"ETX should be 0x03.");
 		}
 
+		TEST_METHOD(TestReadHardwareVersionErrorResponseMessageBuild)
+		{
+			fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
+
+			_len = fw_lib_bin_msg_build_response(1, FW_LIB_MSG_ID_READ_HW_VERSION, 1, FW_LIB_FALSE, FW_LIB_ERROR, _packet_buf);
+
+			Assert::AreEqual((uint8_t)12, _len, L"Packet length should be 12 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)1, _packet_buf[4], L"device_id field(byte4) should be 1.");
+
+			// Length
+			Assert::AreEqual((uint8_t)6, _packet_buf[5], L"length field should 6.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_HW_VERSION, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_READ_HW_VERSION.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 1.");
+			Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 0.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.message_type should be fw_lib_msg_type_response.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)&_packet_buf[1], sizeof(fw_lib_bin_msg_header_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[9]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x67, _packet_buf[9], L"CRC16 byte1 should be 0x67.");
+			Assert::AreEqual((uint8_t)0x33, _packet_buf[10], L"CRC16 byte1 should be 0x33.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
+		}
+
 		TEST_METHOD(TestReadFirmwareVersionCommandMessageBuild)
 		{
 			fw_lib_bin_msg_header_t* header = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
@@ -235,7 +278,7 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
 		}
 
-		TEST_METHOD(TestReadFirmwareVersionResponseMessageBuild)
+		TEST_METHOD(TestReadFirmwareVersionOkResponseMessageBuild)
 		{
 			fw_bin_msg_read_fw_ver_resp_t* resp = (fw_bin_msg_read_fw_ver_resp_t*)&_packet_buf[1];
 
@@ -286,6 +329,49 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[14], L"ETX should be 0x03.");
 		}
 
+		TEST_METHOD(TestReadFirmwareVersionErrorResponseMessageBuild)
+		{
+			fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
+
+			_len = fw_lib_bin_msg_build_response(1, FW_LIB_MSG_ID_READ_FW_VERSION, 2, FW_LIB_FALSE, FW_LIB_ERROR, _packet_buf);
+
+			Assert::AreEqual((uint8_t)12, _len, L"Packet length should be 12 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)1, _packet_buf[4], L"device_id field(byte4) should be 1.");
+
+			// Length
+			Assert::AreEqual((uint8_t)6, _packet_buf[5], L"length field should 6.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_FW_VERSION, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_READ_FW_VERSION.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)2, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 1.");
+			Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 0.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.message_type should be fw_lib_msg_type_response.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)&_packet_buf[1], sizeof(fw_lib_bin_msg_header_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[9]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x6D, _packet_buf[9], L"CRC16 byte1 should be 0x6D.");
+			Assert::AreEqual((uint8_t)0x36, _packet_buf[10], L"CRC16 byte1 should be 0x36.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
+		}
+
 		TEST_METHOD(TestReadGpioCommandMessageBuild)
 		{
 			fw_bin_msg_read_gpio_cmd_t* cmd = (fw_bin_msg_read_gpio_cmd_t*)&_packet_buf[1];
@@ -334,7 +420,7 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[12], L"ETX should be 0x03.");
 		}
 
-		TEST_METHOD(TestReadGpioResponseMessageBuild)
+		TEST_METHOD(TestReadGpioOkResponseMessageBuild)
 		{
 			fw_bin_msg_read_gpio_resp_t* resp = (fw_bin_msg_read_gpio_resp_t*)&_packet_buf[1];
 
@@ -379,6 +465,49 @@ namespace FwLibUnitTest
 
 			// ETX
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[12], L"ETX should be 0x03.");
+		}
+
+		TEST_METHOD(TestReadGpioErrorResponseMessageBuild)
+		{
+			fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
+
+			_len = fw_lib_bin_msg_build_response(1, FW_LIB_MSG_ID_READ_GPIO, 3, FW_LIB_FALSE, FW_LIB_ERROR, _packet_buf);
+
+			Assert::AreEqual((uint8_t)12, _len, L"Packet length should be 12 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)1, _packet_buf[4], L"device_id field(byte4) should be 1.");
+
+			// Length
+			Assert::AreEqual((uint8_t)6, _packet_buf[5], L"length field should 6.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_GPIO, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_READ_GPIO.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)3, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 3.");
+			Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 0.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.message_type should be fw_lib_msg_type_response.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)&_packet_buf[1], sizeof(fw_lib_bin_msg_header_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[9]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x6B, _packet_buf[9], L"CRC16 byte1 should be 0x6B.");
+			Assert::AreEqual((uint8_t)0x35, _packet_buf[10], L"CRC16 byte1 should be 0x35.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
 		}
 
 		TEST_METHOD(TestWriteGpioCommandMessageBuild)
@@ -432,7 +561,7 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[13], L"ETX should be 0x03.");
 		}
 
-		TEST_METHOD(TestWriteGpioResponseMessageBuild)
+		TEST_METHOD(TestWriteGpioOkResponseMessageBuild)
 		{
 			fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
 
@@ -470,6 +599,49 @@ namespace FwLibUnitTest
 			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
 			Assert::AreEqual((uint8_t)0x78, _packet_buf[9], L"CRC16 byte1 should be 0x78.");
 			Assert::AreEqual((uint8_t)0x3c, _packet_buf[10], L"CRC16 byte1 should be 0x3c.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
+		}
+
+		TEST_METHOD(TestWriteGpioErrorResponseMessageBuild)
+		{
+			fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
+
+			_len = fw_lib_bin_msg_build_response(1, FW_LIB_MSG_ID_WRITE_GPIO, 4, FW_LIB_FALSE, FW_LIB_ERROR, _packet_buf);
+
+			Assert::AreEqual((uint8_t)12, _len, L"Packet length should be 12 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)1, _packet_buf[4], L"device_id field(byte4) should be 1.");
+
+			// Length
+			Assert::AreEqual((uint8_t)6, _packet_buf[5], L"length field should 6.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_WRITE_GPIO, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_WRITE_GPIO.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)4, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 4.");
+			Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 0.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.message_type should be fw_lib_msg_type_response.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)&_packet_buf[1], sizeof(fw_lib_bin_msg_header_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[9]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x79, _packet_buf[9], L"CRC16 byte1 should be 0x79.");
+			Assert::AreEqual((uint8_t)0x3C, _packet_buf[10], L"CRC16 byte1 should be 0x3C.");
 
 			// ETX
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");

@@ -138,17 +138,20 @@ static fw_lib_bool_t check_header_payload(fw_lib_bin_parser_t* parser_handle)
   }
   else if (message_type == FW_LIB_MSG_TYPE_RESPONSE)
   {
-    if (header->message_id == FW_LIB_MSG_ID_READ_HW_VERSION)
+    if (FW_LIB_BIT_FIELD_GET(header->flag2, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS) == FW_LIB_OK)
     {
-      msg_size = sizeof(fw_bin_msg_read_hw_ver_resp_t);
-    }
-    else if (header->message_id == FW_LIB_MSG_ID_READ_FW_VERSION)
-    {
-      msg_size = sizeof(fw_bin_msg_read_fw_ver_resp_t);
-    }
-    else if (header->message_id == FW_LIB_MSG_ID_READ_GPIO)
-    {
-      msg_size = sizeof(fw_bin_msg_read_gpio_resp_t);
+      if (header->message_id == FW_LIB_MSG_ID_READ_HW_VERSION)
+      {
+        msg_size = sizeof(fw_bin_msg_read_hw_ver_resp_t);
+      }
+      else if (header->message_id == FW_LIB_MSG_ID_READ_FW_VERSION)
+      {
+        msg_size = sizeof(fw_bin_msg_read_fw_ver_resp_t);
+      }
+      else if (header->message_id == FW_LIB_MSG_ID_READ_GPIO)
+      {
+        msg_size = sizeof(fw_bin_msg_read_gpio_resp_t);
+      }
     }
   }
   else if (message_type == FW_LIB_MSG_TYPE_EVENT)

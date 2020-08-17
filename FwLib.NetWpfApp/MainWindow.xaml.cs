@@ -435,21 +435,46 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (result.Response.Arguments?.Count == 3)
+                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == FwLibConstant.OK)
                             {
-                                response = $"R : {(byte)result.Response.Arguments[0]}.{(byte)result.Response.Arguments[1]}.{(byte)result.Response.Arguments[2]}";
+                                if (result.Response.Arguments?.Count == 3)
+                                {
+                                    response = $"R : {(byte)result.Response.Arguments[0]}.{(byte)result.Response.Arguments[1]}.{(byte)result.Response.Arguments[2]}";
 
+                                }
+                                else
+                                {
+                                    response = "R : Invalid response(invalid version format)";
+                                }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid version format)";
+                                response = "R : Error";
                             }
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 2)
+                            if (result.Response.Arguments?.Count == 1)
                             {
-                                response = $"R : {(string)result.Response.Arguments[1]}";
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                {
+                                    response = "R : Error";
+                                }
+                                else
+                                {
+                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
+                                }
+                            }
+                            else if (result.Response.Arguments?.Count == 2)
+                            {
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
+                                {
+                                    response = $"R : OK, {(string)result.Response.Arguments[1]}";
+                                }
+                                else
+                                {
+                                    response = $"R : Error - {result.Response.Arguments[0]}, {result.Response.Arguments[1]}";
+                                }
                             }
                             else
                             {
@@ -499,9 +524,9 @@ namespace FwLib.NetWpfApp
 
             if (command != null)
             {
-                CommandResult result = _msgManager.ReadHardwareVersion(command);
+                CommandResult result = _msgManager.ReadFirmwareVersion(command);
 
-                LbMessageHistory.Items.Add($"S : ReadHFirmwareVersion");
+                LbMessageHistory.Items.Add($"S : ReadFirmwareVersion");
 
                 string response = string.Empty;
                 if (result != null)
@@ -510,21 +535,45 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (result.Response.Arguments?.Count == 3)
+                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == FwLibConstant.OK)
                             {
-                                response = $"R : {(byte)result.Response.Arguments[0]}.{(byte)result.Response.Arguments[1]}.{(byte)result.Response.Arguments[2]}";
-
+                                if (result.Response.Arguments?.Count == 3)
+                                {
+                                    response = $"R : {(byte)result.Response.Arguments[0]}.{(byte)result.Response.Arguments[1]}.{(byte)result.Response.Arguments[2]}";
+                                }
+                                else
+                                {
+                                    response = "R : Invalid response(invalid version format)";
+                                }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid version format)";
+                                response = "R : Error";
                             }
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 2)
+                            if (result.Response.Arguments?.Count == 1)
                             {
-                                response = $"R : {(string)result.Response.Arguments[1]}";
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                {
+                                    response = "R : Error";
+                                }
+                                else
+                                {
+                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
+                                }
+                            }
+                            else if (result.Response.Arguments?.Count == 2)
+                            {
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
+                                {
+                                    response = $"R : OK, {(string)result.Response.Arguments[1]}";
+                                }
+                                else
+                                {
+                                    response = $"R : Error - {result.Response.Arguments[0]}, {result.Response.Arguments[1]}";
+                                }
                             }
                             else
                             {
@@ -586,7 +635,7 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == 0)
+                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == FwLibConstant.OK)
                             {
                                 response = $"R : OK";
                             }
@@ -668,20 +717,46 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            FwLibBinMessageResponse resp = (FwLibBinMessageResponse)result.Response;
+                            if (resp.Header.Error == FwLibConstant.OK)
                             {
-                                response = $"R : {(byte)result.Response.Arguments[0]}";
+                                if (result.Response.Arguments?.Count == 1)
+                                {
+                                    response = $"R : {(byte)result.Response.Arguments[0]}";
+                                }
+                                else
+                                {
+                                    response = "R : Invalid response(invalid argument count)";
+                                }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = "R : Error";
                             }
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 3)
+                            if (result.Response.Arguments?.Count == 1)
                             {
-                                response = $"R : {(byte)result.Response.Arguments[2]}";
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                {
+                                    response = "R : Error";
+                                }
+                                else
+                                {
+                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
+                                }
+                            }
+                            else if (result.Response.Arguments?.Count == 3)
+                            {
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
+                                {
+                                    response = $"R : OK, {(byte)result.Response.Arguments[1]}, {(byte)result.Response.Arguments[2]}";
+                                }
+                                else
+                                {
+                                    response = $"R : Error, {result.Response.Arguments[0]}, {result.Response.Arguments[1]}, {result.Response.Arguments[2]}";
+                                }
                             }
                             else
                             {

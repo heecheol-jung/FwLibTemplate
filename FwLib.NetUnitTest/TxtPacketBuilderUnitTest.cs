@@ -195,5 +195,89 @@ namespace FwLib.NetUnitTest
             expectedPacket = Encoding.ASCII.GetBytes(commandString);
             CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
         }
+
+        [TestMethod]
+        public void TestReadTemperatureCommandMessageBuild()
+        {
+            message = new FwLibTxtMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadTemperature,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "7"     // Sensor number
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+
+            commandString = "RTEMP 6,7\n";
+            expectedPacket = Encoding.ASCII.GetBytes(commandString);
+            CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureOkResponsedMessageBuild()
+        {
+            message = new FwLibTxtMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperature,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "0",    // Return code
+                    "7",    // Sensor number
+                    "12.3"  // Temperature value
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+
+            commandString = "RTEMP 6,0,7,12.3\n";
+            expectedPacket = Encoding.ASCII.GetBytes(commandString);
+            CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityCommandMessageBuild()
+        {
+            message = new FwLibTxtMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadHumidity,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "7"     // Sensor number
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+
+            commandString = "RHUM 6,7\n";
+            expectedPacket = Encoding.ASCII.GetBytes(commandString);
+            CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityOkResponsedMessageBuild()
+        {
+            message = new FwLibTxtMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadHumidity,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "0",    // Return code
+                    "7",    // Sensor number
+                    "23.4"  // Humidity value
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+
+            commandString = "RHUM 6,0,7,23.4\n";
+            expectedPacket = Encoding.ASCII.GetBytes(commandString);
+            CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
+        }
     }
 }

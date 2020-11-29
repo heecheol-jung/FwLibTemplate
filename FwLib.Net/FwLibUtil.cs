@@ -136,6 +136,38 @@ namespace FwLib.Net
             };
             msgTemplates.Add(msgTemplate);
 
+            msgTemplate = new FwLibMessageTemplate()
+            {
+                MessageIdForCApi = "FW_LIB_MSG_ID_READ_TEMPERATURE",
+                MessageId = FwLibMessageId.ReadTemperature,
+                MessageType = FwLibMessageCategory.Command,
+                Arguments = new List<FwLibArgumentTemplate>()
+                {
+                    new FwLibArgumentTemplate()
+                    {
+                        Name = "Sensor number",
+                        DataType = "System.Byte"
+                    }
+                }
+            };
+            msgTemplates.Add(msgTemplate);
+
+            msgTemplate = new FwLibMessageTemplate()
+            {
+                MessageIdForCApi = "FW_LIB_MSG_ID_READ_HUMIDITY",
+                MessageId = FwLibMessageId.ReadHumidity,
+                MessageType = FwLibMessageCategory.Command,
+                Arguments = new List<FwLibArgumentTemplate>()
+                {
+                    new FwLibArgumentTemplate()
+                    {
+                        Name = "Sensor number",
+                        DataType = "System.Byte"
+                    }
+                }
+            };
+            msgTemplates.Add(msgTemplate);
+
             return msgTemplates;
         }
 

@@ -448,7 +448,8 @@ namespace FwLib.NetUnitTest
                 MessageId = FwLibMessageId.ReadGpio,
                 Arguments = new List<object>()
                 {
-                    (byte)1 // GPIO value
+                    (byte)1,    // GPIO number
+                    (byte)1     // GPIO value
                 }
             };
             ((IFwLibBinMessage)_message).Header.DeviceId = 1;
@@ -459,7 +460,7 @@ namespace FwLib.NetUnitTest
             FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
 
             Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
-            Assert.AreEqual(13, _message.Buffer.Length, "Total packet length should be 13");
+            Assert.AreEqual(14, _message.Buffer.Length, "Total packet length should be 14");
             // STX
             Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
 
@@ -470,7 +471,7 @@ namespace FwLib.NetUnitTest
             Assert.AreEqual((byte)1, _message.Buffer[4], "Buffer[4] should be 1.");
 
             // Length
-            Assert.AreEqual((byte)7, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 7.");
+            Assert.AreEqual((byte)8, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 8.");
 
             // Message Id
             Assert.AreEqual((byte)FwLibMessageId.ReadGpio, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 3.");
@@ -486,19 +487,21 @@ namespace FwLib.NetUnitTest
             flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
             Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
 
+            // GPIO number
+            Assert.AreEqual((byte)1, _message.Buffer[9], "GPIO number should be 1.");
             // GPIO value
-            Assert.AreEqual((byte)1, _message.Buffer[9], "GPIO value should be 1.");
+            Assert.AreEqual((byte)1, _message.Buffer[10], "GPIO value should be 1.");
 
             // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[9])
-            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 9);
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 10);
 
-            Assert.AreEqual((byte)0xc5, _message.Buffer[10], "CRC16 byte1 should be 0xc5.");
-            Assert.AreEqual((byte)0x62, _message.Buffer[11], "CRC16 byte2 should be 0x62.");
-            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[10], "CRC16[0] should be matched.");
-            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[11], "CRC16[1] should be matched.");
+            Assert.AreEqual((byte)0x6B, _message.Buffer[11], "CRC16 byte1 should be 0x6B.");
+            Assert.AreEqual((byte)0x35, _message.Buffer[12], "CRC16 byte2 should be 0x35.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[11], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[12], "CRC16[1] should be matched.");
 
             // ETX
-            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[12], "Buffer[12] should end with 0x03.");
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[13], "Buffer[13] should end with 0x03.");
         }
 
         [TestMethod]
@@ -793,6 +796,362 @@ namespace FwLib.NetUnitTest
 
             // ETX
             Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[13], "Buffer[13] should end with 0x03.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureCommandMessageBuild()
+        {
+            _message = new FwLibBinMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadTemperature,
+                Arguments = new List<object>()
+                {
+                    (byte)7     // Sensor number
+                }
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+
+            byte flagExpected = 0;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
+            Assert.AreEqual(13, _message.Buffer.Length, "Total packet length should be 13");
+            // STX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
+
+            // Device Id
+            Assert.AreEqual((byte)0, _message.Buffer[1], "Buffer[1] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[2], "Buffer[2] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[3], "Buffer[3] should be 0.");
+            Assert.AreEqual((byte)6, _message.Buffer[4], "Buffer[4] should be 6.");
+
+            // Length
+            Assert.AreEqual((byte)7, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 7.");
+
+            // Message Id
+            Assert.AreEqual((byte)FwLibMessageId.ReadTemperature, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 6.");
+
+            // Flag1
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)FwLibMessageCategory.Command, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)1, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)5, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[7], $"Buffer[{FwLibConstant.BinHeaderFlag1FieldIndex}] and Bit field1 should be matched.");
+
+            // Flag2
+            flagExpected = 0;
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
+
+            // Sensor number
+            Assert.AreEqual((byte)7, _message.Buffer[9], "Sensor number should be 7.");
+
+            // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[9])
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 9);
+
+            Assert.AreEqual((byte)0xD3, _message.Buffer[10], "CRC16 byte1 should be 0x05.");
+            Assert.AreEqual((byte)0x6A, _message.Buffer[11], "CRC16 byte2 should be 0x02.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[10], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[11], "CRC16[1] should be matched.");
+
+            // ETX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[12], "Buffer[12] should end with 0x03.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureOkResponseMessageBuild()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperature,
+                Arguments = new List<object>()
+                {
+                    (UInt16)123 // Sensor value
+                }
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+
+            byte flagExpected = 0;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
+            Assert.AreEqual(14, _message.Buffer.Length, "Total packet length should be 14");
+            // STX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
+
+            // Device Id
+            Assert.AreEqual((byte)0, _message.Buffer[1], "Buffer[1] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[2], "Buffer[2] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[3], "Buffer[3] should be 0.");
+            Assert.AreEqual((byte)6, _message.Buffer[4], "Buffer[4] should be 6.");
+
+            // Length
+            Assert.AreEqual((byte)8, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 8.");
+
+            // Message Id
+            Assert.AreEqual((byte)FwLibMessageId.ReadTemperature, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 6.");
+
+            // Flag1
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)FwLibMessageCategory.Response, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)5, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[7], $"Buffer[{FwLibConstant.BinHeaderFlag1FieldIndex}] and Bit field1 should be matched.");
+
+            // Flag2
+            flagExpected = 0;
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
+
+            // Sensor value
+            Assert.AreEqual((byte)0, _message.Buffer[9], "Buffer[9] should be 0x00.");
+            Assert.AreEqual((byte)123, _message.Buffer[10], "Buffer[10] value should be 123.");
+
+            // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[9])
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 10);
+
+            Assert.AreEqual((byte)0xB3, _message.Buffer[11], "CRC16 byte1 should be 0xB3.");
+            Assert.AreEqual((byte)0xE5, _message.Buffer[12], "CRC16 byte2 should be 0xE5.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[11], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[12], "CRC16[1] should be matched.");
+
+            // ETX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[13], "Buffer[13] should end with 0x03.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureErrorResponseMessageBuild()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperature
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+            ((IFwLibBinMessage)_message).Header.Error = FwLibConstant.ERROR;
+
+            byte flagExpected = 0;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
+            Assert.AreEqual(12, _message.Buffer.Length, "Total packet length should be 12");
+            // STX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
+
+            // Device Id
+            Assert.AreEqual((byte)0, _message.Buffer[1], "Buffer[1] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[2], "Buffer[2] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[3], "Buffer[3] should be 0.");
+            Assert.AreEqual((byte)6, _message.Buffer[4], "Buffer[4] should be 6.");
+
+            // Length
+            Assert.AreEqual((byte)6, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 6.");
+
+            // Message Id
+            Assert.AreEqual((byte)FwLibMessageId.ReadTemperature, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 6.");
+
+            // Flag1
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)FwLibMessageCategory.Response, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)5, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[7], $"Buffer[{FwLibConstant.BinHeaderFlag1FieldIndex}] and Bit field1 should be matched.");
+
+            // Flag2
+            flagExpected = 0;
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, FwLibConstant.ERROR, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
+
+            // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[8])
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 8);
+
+            Assert.AreEqual((byte)0x03, _message.Buffer[9], "CRC16 byte1 should be 0x03.");
+            Assert.AreEqual((byte)0x01, _message.Buffer[10], "CRC16 byte2 should be 0x01.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[9], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[10], "CRC16[1] should be matched.");
+
+            // ETX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[11], "Buffer[11] should end with 0x03.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityCommandMessageBuild()
+        {
+            _message = new FwLibBinMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadHumidity,
+                Arguments = new List<object>()
+                {
+                    (byte)7     // Sensor number
+                }
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+
+            byte flagExpected = 0;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
+            Assert.AreEqual(13, _message.Buffer.Length, "Total packet length should be 13");
+            // STX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
+
+            // Device Id
+            Assert.AreEqual((byte)0, _message.Buffer[1], "Buffer[1] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[2], "Buffer[2] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[3], "Buffer[3] should be 0.");
+            Assert.AreEqual((byte)6, _message.Buffer[4], "Buffer[4] should be 6.");
+
+            // Length
+            Assert.AreEqual((byte)7, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 7.");
+
+            // Message Id
+            Assert.AreEqual((byte)FwLibMessageId.ReadHumidity, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 7.");
+
+            // Flag1
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)FwLibMessageCategory.Command, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)1, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)5, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[7], $"Buffer[{FwLibConstant.BinHeaderFlag1FieldIndex}] and Bit field1 should be matched.");
+
+            // Flag2
+            flagExpected = 0;
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
+
+            // Sensor number
+            Assert.AreEqual((byte)7, _message.Buffer[9], "Sensor number should be 7.");
+
+            // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[9])
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 9);
+
+            Assert.AreEqual((byte)0xDB, _message.Buffer[10], "CRC16 byte1 should be 0xDB.");
+            Assert.AreEqual((byte)0x6E, _message.Buffer[11], "CRC16 byte2 should be 0x6E.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[10], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[11], "CRC16[1] should be matched.");
+
+            // ETX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[12], "Buffer[12] should end with 0x03.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityOkResponseMessageBuild()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadHumidity,
+                Arguments = new List<object>()
+                {
+                    (UInt16)234 // Sensor value
+                }
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+
+            byte flagExpected = 0;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
+            Assert.AreEqual(14, _message.Buffer.Length, "Total packet length should be 14");
+            // STX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
+
+            // Device Id
+            Assert.AreEqual((byte)0, _message.Buffer[1], "Buffer[1] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[2], "Buffer[2] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[3], "Buffer[3] should be 0.");
+            Assert.AreEqual((byte)6, _message.Buffer[4], "Buffer[4] should be 6.");
+
+            // Length
+            Assert.AreEqual((byte)8, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 8.");
+
+            // Message Id
+            Assert.AreEqual((byte)FwLibMessageId.ReadHumidity, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 7.");
+
+            // Flag1
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)FwLibMessageCategory.Response, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)5, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[7], $"Buffer[{FwLibConstant.BinHeaderFlag1FieldIndex}] and Bit field1 should be matched.");
+
+            // Flag2
+            flagExpected = 0;
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
+
+            // Sensor value
+            Assert.AreEqual((byte)0, _message.Buffer[9], "Buffer[9] should be 0x00.");
+            Assert.AreEqual((byte)234, _message.Buffer[10], "Buffer[10] value should be 234.");
+
+            // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[9])
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 10);
+
+            Assert.AreEqual((byte)0x32, _message.Buffer[11], "CRC16 byte1 should be 0x32.");
+            Assert.AreEqual((byte)0xED, _message.Buffer[12], "CRC16 byte2 should be 0xED.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[11], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[12], "CRC16[1] should be matched.");
+
+            // ETX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[13], "Buffer[13] should end with 0x03.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityErrorResponseMessageBuild()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadHumidity
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+            ((IFwLibBinMessage)_message).Header.Error = FwLibConstant.ERROR;
+
+            byte flagExpected = 0;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            Assert.IsNotNull(_message.Buffer, "Buffer property should not be null.");
+            Assert.AreEqual(12, _message.Buffer.Length, "Total packet length should be 12");
+            // STX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_STX, _message.Buffer[0], "Buffer[0] should start with 0x02.");
+
+            // Device Id
+            Assert.AreEqual((byte)0, _message.Buffer[1], "Buffer[1] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[2], "Buffer[2] should be 0.");
+            Assert.AreEqual((byte)0, _message.Buffer[3], "Buffer[3] should be 0.");
+            Assert.AreEqual((byte)6, _message.Buffer[4], "Buffer[4] should be 6.");
+
+            // Length
+            Assert.AreEqual((byte)6, _message.Buffer[5], $"Buffer[{FwLibConstant.BinHeaderLengthFieldIndex}] should be 6.");
+
+            // Message Id
+            Assert.AreEqual((byte)FwLibMessageId.ReadHumidity, _message.Buffer[6], $"Buffer[{FwLibConstant.BinHeaderMessageIdFieldIndex}] should be 7.");
+
+            // Flag1
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)FwLibMessageCategory.Response, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_MSG_TYPE_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)0, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_RET_EXPECTED_POS);
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, (byte)5, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FwLibConstant.BIN_MSG_HDR_FLG1_SEQ_NUM_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[7], $"Buffer[{FwLibConstant.BinHeaderFlag1FieldIndex}] and Bit field1 should be matched.");
+
+            // Flag2
+            flagExpected = 0;
+            flagExpected = FwLibUtil.BitFieldSet(flagExpected, FwLibConstant.ERROR, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_MASK, FwLibConstant.BIN_MSG_HDR_FLG2_ERROR_POS);
+            Assert.AreEqual(flagExpected, _message.Buffer[8], $"Buffer[{FwLibConstant.BinHeaderFlag2FieldIndex}] and Bit field2 should be matched.");
+
+            // CRC16 : Device Id(Buffer[1]) ~ BitField2(Buffer[8])
+            _crc16 = FwLibUtil.CRC16(_message.Buffer, 1, 8);
+
+            Assert.AreEqual((byte)0x07, _message.Buffer[9], "CRC16 byte1 should be 0x07.");
+            Assert.AreEqual((byte)0x03, _message.Buffer[10], "CRC16 byte2 should be 0x03.");
+            Assert.AreEqual((byte)((_crc16 >> 8) & 0xff), _message.Buffer[9], "CRC16[0] should be matched.");
+            Assert.AreEqual((byte)(_crc16 & 0xff), _message.Buffer[10], "CRC16[1] should be matched.");
+
+            // ETX
+            Assert.AreEqual(FwLibConstant.BIN_MSG_ETX, _message.Buffer[11], "Buffer[11] should end with 0x03.");
         }
     }
 }

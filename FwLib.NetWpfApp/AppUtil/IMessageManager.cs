@@ -16,5 +16,7 @@ namespace FwLib.NetWpfApp.AppUtil
         CommandResult ReadFirmwareVersion(IFwLibMessage command);
         CommandResult WriteGpio(IFwLibMessage command);
         CommandResult ReadGpio(IFwLibMessage command);
+        CommandResult ReadTemperature(IFwLibMessage command);
+        CommandResult ReadHumidity(IFwLibMessage command);
     }
 }

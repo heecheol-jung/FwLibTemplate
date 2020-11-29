@@ -199,7 +199,7 @@ namespace FwLib.Net
                 case FwLibMessageId.ReadHardwareVersion:
                 case FwLibMessageId.ReadFirmwareVersion:
                     {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 8);
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageStruct)));
                         FwLibBinMessageStruct msg = Marshal.PtrToStructure<FwLibBinMessageStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                             (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -211,7 +211,7 @@ namespace FwLib.Net
 
                 case FwLibMessageId.ReadGpio:
                     {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 9);
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadGpioCommandStruct)));
                         FwLibBinMessageReadGpioCommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadGpioCommandStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                             (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -227,7 +227,7 @@ namespace FwLib.Net
 
                 case FwLibMessageId.WriteGpio:
                     {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 10);
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageWriteGpioCommandStruct)));
                         FwLibBinMessageWriteGpioCommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageWriteGpioCommandStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                             (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -236,6 +236,38 @@ namespace FwLib.Net
                             {
                                 (byte)msg.GpioNumber,
                                 (byte)msg.GpioValue
+                            };
+                            ret = true;
+                        }
+                    }
+                    break;
+
+                case FwLibMessageId.ReadTemperature:
+                    {
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadTemperatureCommandStruct)));
+                        FwLibBinMessageReadTemperatureCommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadTemperatureCommandStruct>(_bufPtr);
+                        if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                            (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                        {
+                            arguments = new List<object>
+                            {
+                                (byte)msg.SensorNumber
+                            };
+                            ret = true;
+                        }
+                    }
+                    break;
+
+                case FwLibMessageId.ReadHumidity:
+                    {
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadHumidityCommandStruct)));
+                        FwLibBinMessageReadHumidityCommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHumidityCommandStruct>(_bufPtr);
+                        if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                            (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                        {
+                            arguments = new List<object>
+                            {
+                                (byte)msg.SensorNumber
                             };
                             ret = true;
                         }
@@ -289,7 +321,7 @@ namespace FwLib.Net
             {
                 case FwLibMessageId.ButtonEvent:
                     {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 10);
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageButtonEventStruct)));
                         FwLibBinMessageButtonEventStruct msg = Marshal.PtrToStructure<FwLibBinMessageButtonEventStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                             (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -333,11 +365,13 @@ namespace FwLib.Net
             //message = null;
             if (header.Error == FwLibConstant.OK)
             {
+                int numOfBytes = 0;
+
                 switch (messageId)
                 {
                     case FwLibMessageId.ReadHardwareVersion:
                         {
-                            _crc16 = FwLibUtil.CRC16(_buf, 1, 11);
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadHwVerResponseStruct)));
                             FwLibBinMessageReadHwVerResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHwVerResponseStruct>(_bufPtr);
                             if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                                 (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -355,7 +389,7 @@ namespace FwLib.Net
 
                     case FwLibMessageId.ReadFirmwareVersion:
                         {
-                            _crc16 = FwLibUtil.CRC16(_buf, 1, 11);
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadFwVerResponseStruct)));
                             FwLibBinMessageReadFwVerResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadFwVerResponseStruct>(_bufPtr);
                             if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                                 (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -373,13 +407,16 @@ namespace FwLib.Net
 
                     case FwLibMessageId.ReadGpio:
                         {
-                            _crc16 = FwLibUtil.CRC16(_buf, 1, 9);
+                            //numOfBytes = Marshal.SizeOf() - Marshal.SizeOf(typeof(FwLibBinMessageTailStruct)) - 1;
+                            numOfBytes = GetCrc16ByteCount(typeof(FwLibBinMessageReadGpioResponseStruct));
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, numOfBytes);
                             FwLibBinMessageReadGpioResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadGpioResponseStruct>(_bufPtr);
                             if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                                 (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
                                 arguments = new List<object>()
                                 {
+                                    msg.GpioNumber,
                                     msg.GpioValue
                                 };
                                 ret = true;
@@ -389,11 +426,49 @@ namespace FwLib.Net
 
                     case FwLibMessageId.WriteGpio:
                         {
-                            _crc16 = FwLibUtil.CRC16(_buf, 1, 8);
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageStruct)));
                             FwLibBinMessageStruct msg = Marshal.PtrToStructure<FwLibBinMessageStruct>(_bufPtr);
                             if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                                 (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
+                                ret = true;
+                            }
+                        }
+                        break;
+
+                    case FwLibMessageId.ReadTemperature:
+                        {
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadTemperatureResponseStruct)));
+                            FwLibBinMessageReadTemperatureResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadTemperatureResponseStruct>(_bufPtr);
+                            if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                                (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                            {
+                                //msg.SensorValue = FwLibUtil.SwapUInt16(msg.SensorValue);
+
+                                arguments = new List<object>()
+                                {
+                                    msg.SensorNumber,
+                                    msg.SensorValue
+                                };
+                                ret = true;
+                            }
+                        }
+                        break;
+
+                    case FwLibMessageId.ReadHumidity:
+                        {
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadHumidityResponseStruct)));
+                            FwLibBinMessageReadHumidityResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHumidityResponseStruct>(_bufPtr);
+                            if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
+                                (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
+                            {
+                                //msg.SensorValue = FwLibUtil.SwapUInt16(msg.SensorValue);
+
+                                arguments = new List<object>()
+                                {
+                                    msg.SensorNumber,
+                                    msg.SensorValue
+                                };
                                 ret = true;
                             }
                         }
@@ -408,7 +483,9 @@ namespace FwLib.Net
                     case FwLibMessageId.ReadFirmwareVersion:
                     case FwLibMessageId.ReadGpio:
                     case FwLibMessageId.WriteGpio:
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, 8);
+                    case FwLibMessageId.ReadTemperature:
+                    case FwLibMessageId.ReadHumidity:
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageStruct)));
                         FwLibBinMessageStruct msg = Marshal.PtrToStructure<FwLibBinMessageStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                             (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
@@ -436,6 +513,12 @@ namespace FwLib.Net
             }
 
             return ret;
+        }
+
+        private int GetCrc16ByteCount(Type type)
+        {
+            // Whole message length - (CRC langth + ETX length) - (STX length)
+            return (Marshal.SizeOf(type) - Marshal.SizeOf(typeof(FwLibBinMessageTailStruct)) - 1);
         }
         #endregion
     }

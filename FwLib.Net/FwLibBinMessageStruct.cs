@@ -165,6 +165,7 @@ namespace FwLib.Net
     public struct FwLibBinMessageReadGpioResponseStruct
     {
         public FwLibBinMessageHeaderStruct Header;
+        public byte GpioNumber;
         public byte GpioValue;
         public FwLibBinMessageTailStruct Tail;
     }
@@ -184,6 +185,40 @@ namespace FwLib.Net
         public FwLibBinMessageHeaderStruct Header;
         public byte ButtonNumber;
         public byte ButtonValue;
+        public FwLibBinMessageTailStruct Tail;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct FwLibBinMessageReadTemperatureCommandStruct
+    {
+        public FwLibBinMessageHeaderStruct Header;
+        public byte SensorNumber;
+        public FwLibBinMessageTailStruct Tail;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct FwLibBinMessageReadHumidityCommandStruct
+    {
+        public FwLibBinMessageHeaderStruct Header;
+        public byte SensorNumber;
+        public FwLibBinMessageTailStruct Tail;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct FwLibBinMessageReadTemperatureResponseStruct
+    {
+        public FwLibBinMessageHeaderStruct Header;
+        public byte SensorNumber;
+        public UInt16 SensorValue;
+        public FwLibBinMessageTailStruct Tail;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct FwLibBinMessageReadHumidityResponseStruct
+    {
+        public FwLibBinMessageHeaderStruct Header;
+        public byte SensorNumber;
+        public UInt16 SensorValue;
         public FwLibBinMessageTailStruct Tail;
     }
 }

@@ -32,7 +32,9 @@ namespace FwLib.Net
         ReadFirmwareVersion = 2,
         ReadGpio = 3,
         WriteGpio = 4,
-        ButtonEvent = 5
+        ButtonEvent = 5,
+        ReadTemperature = 6,
+        ReadHumidity = 7
     }
 
     public enum FwLibParseState
@@ -190,6 +192,8 @@ namespace FwLib.Net
         public const string STR_RGPIO = "RGPIO";
         public const string STR_WGPIO = "WGPIO";
         public const string STR_EBTN = "EBTN";
+        public const string STR_RTEMP = "RTEMP";
+        public const string STR_RHUM = "RHUM";
 
         public static Dictionary<FwLibMessageId, string> MessageIdToStringTable = new Dictionary<FwLibMessageId, string>
         {
@@ -198,7 +202,9 @@ namespace FwLib.Net
             { FwLibMessageId.ReadFirmwareVersion, STR_RFVER },
             { FwLibMessageId.ReadGpio, STR_RGPIO },
             { FwLibMessageId.WriteGpio, STR_WGPIO },
-            { FwLibMessageId.ButtonEvent, STR_EBTN }
+            { FwLibMessageId.ButtonEvent, STR_EBTN },
+            { FwLibMessageId.ReadTemperature, STR_RTEMP },
+            { FwLibMessageId.ReadHumidity, STR_RHUM }
         };
 
         public static Dictionary<string, FwLibMessageId> StringToMessageIdTable = new Dictionary<string, FwLibMessageId>
@@ -208,7 +214,9 @@ namespace FwLib.Net
             { STR_RFVER, FwLibMessageId.ReadFirmwareVersion},
             { STR_RGPIO, FwLibMessageId.ReadGpio},
             { STR_WGPIO, FwLibMessageId.WriteGpio},
-            { STR_EBTN, FwLibMessageId.ButtonEvent}
+            { STR_EBTN, FwLibMessageId.ButtonEvent},
+            { STR_RTEMP, FwLibMessageId.ReadTemperature },
+            { STR_RHUM, FwLibMessageId.ReadHumidity }
         };
     }
 }

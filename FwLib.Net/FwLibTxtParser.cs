@@ -416,6 +416,22 @@ namespace FwLib.Net
                     }
                 }
             }
+            else if ((_msgId == FwLibMessageId.ReadTemperature) ||
+                     (_msgId == FwLibMessageId.ReadHumidity))
+            {
+                if (_arguments.Count < 1)
+                {
+                    if (GetByteData(out byte byteData) == true)
+                    {
+                        _arguments.Add(byteData);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
 
             return false;
         }
@@ -508,9 +524,50 @@ namespace FwLib.Net
                     }
                 }
             }
+            else if ((_msgId == FwLibMessageId.ReadTemperature) ||
+                     (_msgId == FwLibMessageId.ReadHumidity))
+            {
+                if (_arguments.Count < 2)
+                {
+                    if (GetByteData(out byte byteData) == true)
+                    {
+                        _arguments.Add(byteData);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (_arguments.Count == 2)
+                {
+                    if (GetDoubleData(out double dblData) == true)
+                    {
+                        _arguments.Add(dblData);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
 
             return false;
         }
+
+        private bool GetDoubleData(out double dblData)
+        {
+            _sb.Clear();
+
+            for (int i = 0; i < _bufPos; i++)
+            {
+                _sb.Append((char)_buf[i]);
+            }
+
+            return double.TryParse(_sb.ToString(), out dblData);
+        }
+
 
         private bool GetStringData(out string stringData)
         {
@@ -544,6 +601,8 @@ namespace FwLib.Net
             {
                 case FwLibMessageId.ReadGpio:
                 case FwLibMessageId.WriteGpio:
+                case FwLibMessageId.ReadTemperature:
+                case FwLibMessageId.ReadHumidity:
                     return true;
             }
             return false;

@@ -302,7 +302,8 @@ namespace FwLib.NetUnitTest
                 MessageId = FwLibMessageId.ReadGpio,
                 Arguments = new List<object>()
                 {
-                    (byte)1 // GPIO value
+                    (byte)1,    // GPIO number
+                    (byte)1     // GPIO value
                 }
             };
             ((IFwLibBinMessage)_message).Header.DeviceId = 1;
@@ -322,7 +323,7 @@ namespace FwLib.NetUnitTest
             Assert.AreEqual(FwLibParserRole.Host, _parser.Role, "Parse role should be Host.");
             Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
             Assert.AreEqual((byte)1, parsedResponse.Header.DeviceId, "Header Device Id field should be 1.");
-            Assert.AreEqual((byte)7, parsedResponse.Header.Length, "Header Length field should be 7.");
+            Assert.AreEqual((byte)8, parsedResponse.Header.Length, "Header Length field should be 8.");
             Assert.AreEqual(FwLibMessageId.ReadGpio, parsedResponse.MessageId, "Header Message ID field should be ReadGpio.");
             Assert.AreEqual(FwLibMessageCategory.Response, parsedResponse.MessageCategory, "Header Message type field should be Response.");
             Assert.AreEqual(false, parsedResponse.Header.ReturnExpected, "Header ReturnExpected field should be false.");
@@ -331,8 +332,9 @@ namespace FwLib.NetUnitTest
             Assert.AreEqual((byte)0, parsedResponse.Header.Error, "Header Error field should be 0.");
             Assert.AreEqual((byte)0, parsedResponse.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
             Assert.IsNotNull(parsedResponse.Arguments, "Arguments property should not be null.");
-            Assert.AreEqual(1, parsedResponse.Arguments.Count, "Argument count should be 1.");
+            Assert.AreEqual(2, parsedResponse.Arguments.Count, "Argument count should be 2.");
             Assert.AreEqual((byte)1, (byte)parsedResponse.Arguments[0], "Argument0 should be 1.");
+            Assert.AreEqual((byte)1, (byte)parsedResponse.Arguments[1], "Argument1 should be 1.");
             Assert.AreNotEqual(DateTime.MinValue, parsedResponse.ReceiveTime, "Received time should not be DateTime.MinValue.");
         }
 
@@ -528,6 +530,255 @@ namespace FwLib.NetUnitTest
             Assert.AreEqual((byte)1, (byte)parsedEvent.Arguments[0], "Argument0 should be 1.");
             Assert.AreEqual((byte)1, (byte)parsedEvent.Arguments[1], "Argument0 should be 1.");
             Assert.AreNotEqual(DateTime.MinValue, parsedEvent.ReceiveTime, "Received time should not be DateTime.MinValue.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureCommandMessageParse()
+        {
+            _message = new FwLibBinMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadTemperature,
+                Arguments = new List<object>()
+                {
+                    (byte)7 // Sensor number
+                }
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            _parser.Role = FwLibParserRole.Device;
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.Parse(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibBinMessageCommand parsedCommand = (FwLibBinMessageCommand)_parsedMessage;
+
+            Assert.AreEqual(FwLibParserRole.Device, _parser.Role, "Parse role should be Device.");
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual((byte)6, parsedCommand.Header.DeviceId, "Header Device Id field should be 6.");
+            Assert.AreEqual((byte)7, parsedCommand.Header.Length, "Header Length field should be 7.");
+            Assert.AreEqual(FwLibMessageId.ReadTemperature, parsedCommand.MessageId, "Header Message ID field should be ReadTemperature.");
+            Assert.AreEqual(FwLibMessageCategory.Command, parsedCommand.MessageCategory, "Header Message type field should be Command.");
+            Assert.AreEqual(true, parsedCommand.Header.ReturnExpected, "Header ReturnExpected field should be true.");
+            Assert.AreEqual((byte)5, parsedCommand.Header.SequenceNumber, "Header Sequence number field should be 5.");
+            Assert.AreEqual((byte)0, parsedCommand.Header.Flag1Reserved, "Header flag1 reserved field should be 0.");
+            Assert.AreEqual((byte)0, parsedCommand.Header.Error, "Header Error field should be 0.");
+            Assert.AreEqual((byte)0, parsedCommand.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
+            Assert.IsNotNull(parsedCommand.Arguments, "Arguments property should not be null.");
+            Assert.AreEqual(1, parsedCommand.Arguments.Count, "Argument count should be 1.");
+            Assert.AreEqual((byte)7, (byte)parsedCommand.Arguments[0], "Argument0 should be 7.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureOkResponseMessageParse()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperature,
+                Arguments = new List<object>()
+                {
+                    (byte)1,    // Sensor number
+                    (UInt16)123 // Sensor value
+                }
+            };
+            if (BitConverter.IsLittleEndian == true)
+            {
+                _message.Arguments[1] = FwLibUtil.SwapUInt16((UInt16)_message.Arguments[1]);
+            }
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+            ((IFwLibBinMessage)_message).Header.Error = FwLibConstant.OK;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            _parser.Role = FwLibParserRole.Host;
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.Parse(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibBinMessageResponse parsedResponse = (FwLibBinMessageResponse)_parsedMessage;
+
+            Assert.AreEqual(FwLibParserRole.Host, _parser.Role, "Parse role should be Host.");
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual((byte)6, parsedResponse.Header.DeviceId, "Header Device Id field should be 6.");
+            Assert.AreEqual((byte)9, parsedResponse.Header.Length, "Header Length field should be 9.");
+            Assert.AreEqual(FwLibMessageId.ReadTemperature, parsedResponse.MessageId, "Header Message ID field should be ReadTemperature.");
+            Assert.AreEqual(FwLibMessageCategory.Response, parsedResponse.MessageCategory, "Header Message type field should be Response.");
+            Assert.AreEqual(false, parsedResponse.Header.ReturnExpected, "Header ReturnExpected field should be false.");
+            Assert.AreEqual((byte)5, parsedResponse.Header.SequenceNumber, "Header Sequence number field should be 5.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag1Reserved, "Header flag1 reserved field should be 0.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Error, "Header Error field should be 0.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
+            Assert.IsNotNull(parsedResponse.Arguments, "Arguments property should not be null.");
+            Assert.AreEqual(2, parsedResponse.Arguments.Count, "Argument count should be 2.");
+            Assert.AreEqual((byte)1, (byte)parsedResponse.Arguments[0], "Argument0 should be 1.");
+            Assert.AreEqual((UInt16)123, (UInt16)parsedResponse.Arguments[1], "Argument0 should be 123.");
+            Assert.AreNotEqual(DateTime.MinValue, parsedResponse.ReceiveTime, "Received time should not be DateTime.MinValue.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureErrorResponseMessageParse()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperature
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+            ((IFwLibBinMessage)_message).Header.Error = FwLibConstant.ERROR;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            _parser.Role = FwLibParserRole.Host;
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.Parse(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibBinMessageResponse parsedResponse = (FwLibBinMessageResponse)_parsedMessage;
+
+            Assert.AreEqual(FwLibParserRole.Host, _parser.Role, "Parse role should be Host.");
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual((byte)6, parsedResponse.Header.DeviceId, "Header Device Id field should be 6.");
+            Assert.AreEqual((byte)6, parsedResponse.Header.Length, "Header Length field should be 6.");
+            Assert.AreEqual(FwLibMessageId.ReadTemperature, parsedResponse.MessageId, "Header Message ID field should be ReadTemperature.");
+            Assert.AreEqual(FwLibMessageCategory.Response, parsedResponse.MessageCategory, "Header Message type field should be Response.");
+            Assert.AreEqual(false, parsedResponse.Header.ReturnExpected, "Header ReturnExpected field should be false.");
+            Assert.AreEqual((byte)5, parsedResponse.Header.SequenceNumber, "Header Sequence number field should be 5.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag1Reserved, "Header flag1 reserved field should be 0.");
+            Assert.AreEqual(FwLibConstant.ERROR, parsedResponse.Header.Error, "Header Error field should be 1.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
+            Assert.IsNull(parsedResponse.Arguments, "Arguments property should be null.");
+            Assert.AreNotEqual(DateTime.MinValue, parsedResponse.ReceiveTime, "Received time should not be DateTime.MinValue.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityCommandMessageParse()
+        {
+            _message = new FwLibBinMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadHumidity,
+                Arguments = new List<object>()
+                {
+                    (byte)7 // Sensor number
+                }
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            _parser.Role = FwLibParserRole.Device;
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.Parse(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibBinMessageCommand parsedCommand = (FwLibBinMessageCommand)_parsedMessage;
+
+            Assert.AreEqual(FwLibParserRole.Device, _parser.Role, "Parse role should be Device.");
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual((byte)6, parsedCommand.Header.DeviceId, "Header Device Id field should be 6.");
+            Assert.AreEqual((byte)7, parsedCommand.Header.Length, "Header Length field should be 7.");
+            Assert.AreEqual(FwLibMessageId.ReadHumidity, parsedCommand.MessageId, "Header Message ID field should be ReadHumidity.");
+            Assert.AreEqual(FwLibMessageCategory.Command, parsedCommand.MessageCategory, "Header Message type field should be Command.");
+            Assert.AreEqual(true, parsedCommand.Header.ReturnExpected, "Header ReturnExpected field should be true.");
+            Assert.AreEqual((byte)5, parsedCommand.Header.SequenceNumber, "Header Sequence number field should be 5.");
+            Assert.AreEqual((byte)0, parsedCommand.Header.Flag1Reserved, "Header flag1 reserved field should be 0.");
+            Assert.AreEqual((byte)0, parsedCommand.Header.Error, "Header Error field should be 0.");
+            Assert.AreEqual((byte)0, parsedCommand.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
+            Assert.IsNotNull(parsedCommand.Arguments, "Arguments property should not be null.");
+            Assert.AreEqual(1, parsedCommand.Arguments.Count, "Argument count should be 1.");
+            Assert.AreEqual((byte)7, (byte)parsedCommand.Arguments[0], "Argument0 should be 7.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityOkResponseMessageParse()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadHumidity,
+                Arguments = new List<object>()
+                {
+                    (byte)1,    // Sensor number
+                    (UInt16)234 // Sensor value
+                }
+            };
+
+            if (BitConverter.IsLittleEndian == true)
+            {
+                _message.Arguments[1] = FwLibUtil.SwapUInt16((UInt16)_message.Arguments[1]);
+            }
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+            ((IFwLibBinMessage)_message).Header.Error = FwLibConstant.OK;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            _parser.Role = FwLibParserRole.Host;
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.Parse(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibBinMessageResponse parsedResponse = (FwLibBinMessageResponse)_parsedMessage;
+
+            Assert.AreEqual(FwLibParserRole.Host, _parser.Role, "Parse role should be Host.");
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual((byte)6, parsedResponse.Header.DeviceId, "Header Device Id field should be 6.");
+            Assert.AreEqual((byte)9, parsedResponse.Header.Length, "Header Length field should be 9.");
+            Assert.AreEqual(FwLibMessageId.ReadHumidity, parsedResponse.MessageId, "Header Message ID field should be ReadHumidity.");
+            Assert.AreEqual(FwLibMessageCategory.Response, parsedResponse.MessageCategory, "Header Message type field should be Response.");
+            Assert.AreEqual(false, parsedResponse.Header.ReturnExpected, "Header ReturnExpected field should be false.");
+            Assert.AreEqual((byte)5, parsedResponse.Header.SequenceNumber, "Header Sequence number field should be 5.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag1Reserved, "Header flag1 reserved field should be 0.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Error, "Header Error field should be 0.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
+            Assert.IsNotNull(parsedResponse.Arguments, "Arguments property should not be null.");
+            Assert.AreEqual(2, parsedResponse.Arguments.Count, "Argument count should be 2.");
+            Assert.AreEqual((byte)1, (byte)parsedResponse.Arguments[0], "Argument0 should be 1.");
+            Assert.AreEqual((UInt16)234, (UInt16)parsedResponse.Arguments[1], "Argument0 should be 234.");
+            Assert.AreNotEqual(DateTime.MinValue, parsedResponse.ReceiveTime, "Received time should not be DateTime.MinValue.");
+        }
+
+        [TestMethod]
+        public void TestReadHumidityErrorResponseMessageParse()
+        {
+            _message = new FwLibBinMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadHumidity
+            };
+            ((IFwLibBinMessage)_message).Header.DeviceId = 6;
+            ((IFwLibBinMessage)_message).Header.SequenceNumber = 5;
+            ((IFwLibBinMessage)_message).Header.Error = FwLibConstant.ERROR;
+
+            FwLibBinPacketBuilder.BuildMessagePacket(ref _message);
+
+            _parser.Role = FwLibParserRole.Host;
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.Parse(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibBinMessageResponse parsedResponse = (FwLibBinMessageResponse)_parsedMessage;
+
+            Assert.AreEqual(FwLibParserRole.Host, _parser.Role, "Parse role should be Host.");
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual((byte)6, parsedResponse.Header.DeviceId, "Header Device Id field should be 6.");
+            Assert.AreEqual((byte)6, parsedResponse.Header.Length, "Header Length field should be 6.");
+            Assert.AreEqual(FwLibMessageId.ReadHumidity, parsedResponse.MessageId, "Header Message ID field should be ReadHumidity.");
+            Assert.AreEqual(FwLibMessageCategory.Response, parsedResponse.MessageCategory, "Header Message type field should be Response.");
+            Assert.AreEqual(false, parsedResponse.Header.ReturnExpected, "Header ReturnExpected field should be false.");
+            Assert.AreEqual((byte)5, parsedResponse.Header.SequenceNumber, "Header Sequence number field should be 5.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag1Reserved, "Header flag1 reserved field should be 0.");
+            Assert.AreEqual(FwLibConstant.ERROR, parsedResponse.Header.Error, "Header Error field should be 1.");
+            Assert.AreEqual((byte)0, parsedResponse.Header.Flag2Reserved, "Header flag2 reserved field should be 0.");
+            Assert.IsNull(parsedResponse.Arguments, "Arguments property should be null.");
+            Assert.AreNotEqual(DateTime.MinValue, parsedResponse.ReceiveTime, "Received time should not be DateTime.MinValue.");
         }
     }
 }

@@ -38,9 +38,8 @@ namespace FwLib.Net
                 //case TypeCode.Decimal:
                 //    return BuildAsciiPacketForDecimal((float)argument);
 
-                // TODO : Implement BuildAsciiPacketForDouble
-                //case TypeCode.Double:
-                //    return BuildAsciiPacketForDouble((double)argument)
+                case TypeCode.Double:
+                    return BuildAsciiPacketForDouble((double)argument);
 
                 // TODO : Implement BuildAsciiPacketForInt16
                 //case TypeCode.Int16:
@@ -79,6 +78,19 @@ namespace FwLib.Net
             }
 
             throw new InvalidOperationException();
+        }
+
+        private static IEnumerable<byte> BuildAsciiPacketForDouble(double doubleArg)
+        {
+            string strValue = doubleArg.ToString("F2", CultureInfo.InvariantCulture);
+            byte[] packet = new byte[strValue.Length];
+
+            for (int i = 0; i < strValue.Length; i++)
+            {
+                packet[i] = (byte)strValue[i];
+            }
+
+            return packet;
         }
 
         internal static IEnumerable<byte> BuildAsciiPacketForByte(byte bytArg)

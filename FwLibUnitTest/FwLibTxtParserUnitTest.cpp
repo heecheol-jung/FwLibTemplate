@@ -221,5 +221,103 @@ namespace FwLibUnitTest
       Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[1].type, L"Args[1] type should be fw_lib_arg_type_uint8.");
       Assert::AreEqual((uint8_t)1, (uint8_t)_parsed_msg.args[1].value.uint8_value, L"Args[1] value should be 1.");
     }
+
+    TEST_METHOD(TestReadTemperatureCommandParse)
+    {
+      // Sensor number.
+      _args[0].type = FW_LIB_ARG_TYPE_UINT8;
+      _args[0].value.uint8_value = 5;
+      _len = fw_lib_txt_msg_build_command(6, FW_LIB_MSG_ID_READ_TEMPERATURE, _args, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_txt_parser_parse_command(&_txt_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint32_t)6, _parsed_msg.device_id, L"Device ID should be 6.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMPERATURE, _parsed_msg.msg_id, L"message_id should be FW_LIB_MSG_ID_READ_TEMPERATURE.");
+      Assert::AreEqual((uint8_t)1, _parsed_msg.arg_count, L"The number of arguments should be 1.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[0].type, L"Args[0] type should be fw_lib_arg_type_uint8.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)_parsed_msg.args[0].value.uint8_value, L"Args[0] value should be 5.");
+    }
+
+    TEST_METHOD(TestReadTemperatureResponseParse)
+    {
+      // Sensor number.
+      _args[0].type = FW_LIB_ARG_TYPE_UINT8;
+      _args[0].value.uint8_value = 5;
+
+      // Temperature value.
+      _args[1].type = FW_LIB_ARG_TYPE_UINT16;
+      _args[1].value.uint16_value = 123;
+
+      _len = fw_lib_txt_msg_build_response(6, FW_LIB_MSG_ID_READ_TEMPERATURE, _args, FW_LIB_OK, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_txt_parser_parse_response_event(&_txt_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint32_t)6, _parsed_msg.device_id, L"Device ID should be 6.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMPERATURE, _parsed_msg.msg_id, L"message_id should be FW_LIB_MSG_ID_READ_TEMPERATURE.");
+      Assert::AreEqual((uint8_t)3, _parsed_msg.arg_count, L"The number of arguments should be 3.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[0].type, L"Args[0] type should be fw_lib_arg_type_uint8.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)_parsed_msg.args[0].value.uint8_value, L"Args[0] value should be 0.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[1].type, L"Args[1] type should be fw_lib_arg_type_uint8.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)_parsed_msg.args[1].value.uint8_value, L"Args[1] value should be 5.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_DOUBLE, (uint8_t)_parsed_msg.args[2].type, L"Args[2] type should be FW_LIB_ARG_TYPE_DOUBLE.");
+      Assert::AreEqual((double)12.3, (double)_parsed_msg.args[2].value.double_value, L"Args[2] value should be 12.3.");
+    }
+
+    TEST_METHOD(TestReadHumidityCommandParse)
+    {
+      // Sensor number.
+      _args[0].type = FW_LIB_ARG_TYPE_UINT8;
+      _args[0].value.uint8_value = 5;
+      _len = fw_lib_txt_msg_build_command(6, FW_LIB_MSG_ID_READ_HUMIDITY, _args, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_txt_parser_parse_command(&_txt_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint32_t)6, _parsed_msg.device_id, L"Device ID should be 6.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_HUMIDITY, _parsed_msg.msg_id, L"message_id should be FW_LIB_MSG_ID_READ_HUMIDITY.");
+      Assert::AreEqual((uint8_t)1, _parsed_msg.arg_count, L"The number of arguments should be 1.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[0].type, L"Args[0] type should be fw_lib_arg_type_uint8.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)_parsed_msg.args[0].value.uint8_value, L"Args[0] value should be 5.");
+    }
+
+    TEST_METHOD(TestReadHumidityResponseParse)
+    {
+      // Sensor number.
+      _args[0].type = FW_LIB_ARG_TYPE_UINT8;
+      _args[0].value.uint8_value = 5;
+
+      // Temperature value.
+      _args[1].type = FW_LIB_ARG_TYPE_UINT16;
+      _args[1].value.uint16_value = 456;
+
+      _len = fw_lib_txt_msg_build_response(6, FW_LIB_MSG_ID_READ_HUMIDITY, _args, FW_LIB_OK, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_txt_parser_parse_response_event(&_txt_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint32_t)6, _parsed_msg.device_id, L"Device ID should be 6.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_HUMIDITY, _parsed_msg.msg_id, L"message_id should be FW_LIB_MSG_ID_READ_HUMIDITY.");
+      Assert::AreEqual((uint8_t)3, _parsed_msg.arg_count, L"The number of arguments should be 3.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[0].type, L"Args[0] type should be fw_lib_arg_type_uint8.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)_parsed_msg.args[0].value.uint8_value, L"Args[0] value should be 0.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_UINT8, (uint8_t)_parsed_msg.args[1].type, L"Args[1] type should be fw_lib_arg_type_uint8.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)_parsed_msg.args[1].value.uint8_value, L"Args[1] value should be 5.");
+      Assert::AreEqual((uint8_t)FW_LIB_ARG_TYPE_DOUBLE, (uint8_t)_parsed_msg.args[2].type, L"Args[2] type should be FW_LIB_ARG_TYPE_DOUBLE.");
+      Assert::AreEqual((double)45.6, (double)_parsed_msg.args[2].value.double_value, L"Args[2] value should be 45.6.");
+    }
 	};
 }

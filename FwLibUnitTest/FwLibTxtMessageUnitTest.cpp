@@ -116,5 +116,80 @@ namespace FwLibUnitTest
 
 			Assert::AreEqual(0, strcmp("WGPIO 4,0\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_WRITE_GPIO response string");
 		}
+
+		TEST_METHOD(TestReadTemperatureCommandMessageBuild)
+		{
+			// Sensor number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 1;
+			_len = fw_lib_txt_msg_build_command(4, FW_LIB_MSG_ID_READ_TEMPERATURE, _args, _packet_buf);
+
+			Assert::AreEqual((uint8_t)10, _len, L"Packet length should be 10 bytes.");
+
+			Assert::AreEqual(0, strcmp("RTEMP 4,1\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_READ_TEMPERATURE command string");
+		}
+
+		TEST_METHOD(TestReadTemperatureResponseMessageBuild)
+		{
+			// Sensor number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 1;
+
+			// Sensor value.
+			_args[1].type = FW_LIB_ARG_TYPE_UINT16;
+			_args[1].value.uint16_value = 123;
+
+			_len = fw_lib_txt_msg_build_response(4, FW_LIB_MSG_ID_READ_TEMPERATURE, _args, FW_LIB_OK, _packet_buf);
+
+			Assert::AreEqual((uint8_t)17, _len, L"Packet length should be 14 bytes.");
+
+			Assert::AreEqual(0, strcmp("RTEMP 4,0,1,12.3\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_READ_TEMPERATURE response string");
+		}
+
+		TEST_METHOD(TestReadHumidityCommandMessageBuild)
+		{
+			// Sensor number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 2;
+			_len = fw_lib_txt_msg_build_command(4, FW_LIB_MSG_ID_READ_HUMIDITY, _args, _packet_buf);
+
+			Assert::AreEqual((uint8_t)9, _len, L"Packet length should be 9 bytes.");
+
+			Assert::AreEqual(0, strcmp("RHUM 4,2\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_READ_HUMIDITY command string");
+		}
+
+		TEST_METHOD(TestReadHumidityResponseMessageBuild)
+		{
+			// Sensor number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 2;
+
+			// Sensor value.
+			_args[1].type = FW_LIB_ARG_TYPE_UINT16;
+			_args[1].value.uint16_value = 234;
+
+			_len = fw_lib_txt_msg_build_response(4, FW_LIB_MSG_ID_READ_HUMIDITY, _args, FW_LIB_OK, _packet_buf);
+
+			Assert::AreEqual((uint8_t)16, _len, L"Packet length should be 16 bytes.");
+
+			Assert::AreEqual(0, strcmp("RHUM 4,0,2,23.4\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_READ_HUMIDITY response string");
+		}
+
+		TEST_METHOD(TestButtonEventMessageBuild)
+		{
+			// Button number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 1;
+
+			// Button value.
+			_args[1].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[1].value.uint16_value = 1;
+
+			_len = fw_lib_txt_msg_build_event(4, FW_LIB_MSG_ID_BUTTON_EVENT, _args, _packet_buf);
+
+			Assert::AreEqual((uint8_t)11, _len, L"Packet length should be 11 bytes.");
+
+			Assert::AreEqual(0, strcmp("EBTN 4,1,1\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_BUTTON_EVENT event string");
+		}
 	};
 }

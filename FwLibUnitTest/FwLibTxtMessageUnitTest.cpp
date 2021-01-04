@@ -191,5 +191,38 @@ namespace FwLibUnitTest
 
 			Assert::AreEqual(0, strcmp("EBTN 4,1,1\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_BUTTON_EVENT event string");
 		}
+
+		TEST_METHOD(TestReadTempemperatureAndHumidityCommandMessageBuild)
+		{
+			// Sensor number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 2;
+			_len = fw_lib_txt_msg_build_command(4, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _args, _packet_buf);
+
+			Assert::AreEqual((uint8_t)9, _len, L"Packet length should be 9 bytes.");
+
+			Assert::AreEqual(0, strcmp("RTAH 4,2\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_READ_TEMP_AND_HUM command string");
+		}
+
+		TEST_METHOD(TestReadTemperatureAndHumidityResponseMessageBuild)
+		{
+			// Sensor number.
+			_args[0].type = FW_LIB_ARG_TYPE_UINT8;
+			_args[0].value.uint8_value = 2;
+
+			// Temperature value.
+			_args[1].type = FW_LIB_ARG_TYPE_UINT16;
+			_args[1].value.uint16_value = 234;
+
+			// Humidity value.
+			_args[2].type = FW_LIB_ARG_TYPE_UINT16;
+			_args[2].value.uint16_value = 567;
+
+			_len = fw_lib_txt_msg_build_response(4, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _args, FW_LIB_OK, _packet_buf);
+
+			Assert::AreEqual((uint8_t)21, _len, L"Packet length should be 21 bytes.");
+
+			Assert::AreEqual(0, strcmp("RTAH 4,0,2,23.4,56.7\n", (const char*)_packet_buf), L"Check FW_LIB_MSG_ID_READ_TEMP_AND_HUM response string");
+		}
 	};
 }

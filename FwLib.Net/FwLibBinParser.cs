@@ -243,25 +243,11 @@ namespace FwLib.Net
                     break;
 
                 case FwLibMessageId.ReadTemperature:
-                    {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadTemperatureCommandStruct)));
-                        FwLibBinMessageReadTemperatureCommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadTemperatureCommandStruct>(_bufPtr);
-                        if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
-                            (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
-                        {
-                            arguments = new List<object>
-                            {
-                                (byte)msg.SensorNumber
-                            };
-                            ret = true;
-                        }
-                    }
-                    break;
-
                 case FwLibMessageId.ReadHumidity:
+                case FwLibMessageId.ReadTemperatureAndHumidity:
                     {
-                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadHumidityCommandStruct)));
-                        FwLibBinMessageReadHumidityCommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHumidityCommandStruct>(_bufPtr);
+                        _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadDht22CommandStruct)));
+                        FwLibBinMessageReadDht22CommandStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadDht22CommandStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                             (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                         {
@@ -437,9 +423,10 @@ namespace FwLib.Net
                         break;
 
                     case FwLibMessageId.ReadTemperature:
+                    case FwLibMessageId.ReadHumidity:
                         {
-                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadTemperatureResponseStruct)));
-                            FwLibBinMessageReadTemperatureResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadTemperatureResponseStruct>(_bufPtr);
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadDht22ResponseStruct)));
+                            FwLibBinMessageReadDht22ResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadDht22ResponseStruct>(_bufPtr);
                             if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                                 (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
@@ -455,10 +442,10 @@ namespace FwLib.Net
                         }
                         break;
 
-                    case FwLibMessageId.ReadHumidity:
+                    case FwLibMessageId.ReadTemperatureAndHumidity:
                         {
-                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadHumidityResponseStruct)));
-                            FwLibBinMessageReadHumidityResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadHumidityResponseStruct>(_bufPtr);
+                            _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageReadDht22TempHumResponseStruct)));
+                            FwLibBinMessageReadDht22TempHumResponseStruct msg = Marshal.PtrToStructure<FwLibBinMessageReadDht22TempHumResponseStruct>(_bufPtr);
                             if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&
                                 (FwLibConstant.BIN_MSG_ETX == msg.Tail.Etx))
                             {
@@ -467,7 +454,8 @@ namespace FwLib.Net
                                 arguments = new List<object>()
                                 {
                                     msg.SensorNumber,
-                                    msg.SensorValue
+                                    msg.Temperature,
+                                    msg.Humidity
                                 };
                                 ret = true;
                             }
@@ -485,6 +473,7 @@ namespace FwLib.Net
                     case FwLibMessageId.WriteGpio:
                     case FwLibMessageId.ReadTemperature:
                     case FwLibMessageId.ReadHumidity:
+                    case FwLibMessageId.ReadTemperatureAndHumidity:
                         _crc16 = FwLibUtil.CRC16(_buf, 1, GetCrc16ByteCount(typeof(FwLibBinMessageStruct)));
                         FwLibBinMessageStruct msg = Marshal.PtrToStructure<FwLibBinMessageStruct>(_bufPtr);
                         if ((CompareCrc(_crc16, msg.Tail.Crc16) == true) &&

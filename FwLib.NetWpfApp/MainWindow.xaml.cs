@@ -302,6 +302,7 @@ namespace FwLib.NetWpfApp
 
                     case FwLibMessageId.ReadTemperature:
                     case FwLibMessageId.ReadHumidity:
+                    case FwLibMessageId.ReadTemperatureAndHumidity:
                         {
                             UcArgumentTemplate argSensorNum = (UcArgumentTemplate)SpArguments.Children[0];
                             if (string.IsNullOrEmpty(argSensorNum.ArgValue) == true)
@@ -325,6 +326,10 @@ namespace FwLib.NetWpfApp
                             else if (_selectedMsgTemplate.MessageId == FwLibMessageId.ReadHumidity)
                             {
                                 ReadHumidity(deviceId, sensorNum);
+                            }
+                            else if (_selectedMsgTemplate.MessageId == FwLibMessageId.ReadTemperatureAndHumidity)
+                            {
+                                ReadTemperatureAndHumidity(deviceId, sensorNum);
                             }
                             
                         }
@@ -824,6 +829,7 @@ namespace FwLib.NetWpfApp
                 };
                 ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
                 ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FwLibBinMessageCommand)command).TryInterval = 1000;
             }
             else if (_currentParserType == ParserType.Text)
             {
@@ -914,6 +920,115 @@ namespace FwLib.NetWpfApp
             }
         }
 
+        private void ReadTemperatureAndHumidity(uint deviceId, byte sensorNum)
+        {
+            IFwLibMessage command = null;
+
+            if (_currentParserType == ParserType.Binary)
+            {
+                command = new FwLibBinMessageCommand()
+                {
+                    MessageId = FwLibMessageId.ReadTemperatureAndHumidity
+                };
+                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
+                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+            }
+            else if (_currentParserType == ParserType.Text)
+            {
+                command = new FwLibTxtMessageCommand()
+                {
+                    MessageId = FwLibMessageId.ReadTemperatureAndHumidity,
+                    DeviceId = deviceId
+                };
+            }
+
+            if (command != null)
+            {
+                command.Arguments = new List<object>() { sensorNum };
+                CommandResult result = _msgManager.ReadTemperatureAndHumidity(command);
+
+                LbMessageHistory.Items.Add($"S : ReadTemperature");
+
+                string response = string.Empty;
+                if (result != null)
+                {
+                    if (result.Response != null)
+                    {
+                        if (_currentParserType == ParserType.Binary)
+                        {
+                            FwLibBinMessageResponse resp = (FwLibBinMessageResponse)result.Response;
+                            if (resp.Header.Error == FwLibConstant.OK)
+                            {
+                                if (result.Response.Arguments?.Count == 3)
+                                {
+                                    UInt16 temperatureValue = (UInt16)result.Response.Arguments[1];
+                                    UInt16 humidityValue = (UInt16)result.Response.Arguments[2];
+                                    //response = $"R : {(byte)result.Response.Arguments[0]},{temperatureValue / 10}.{temperatureValue % 10},";
+                                    response = string.Format("R : {0},{1}.{2},{3},{4}",
+                                        (byte)result.Response.Arguments[0],
+                                        temperatureValue / 10, temperatureValue % 10,
+                                        humidityValue / 10, humidityValue % 10
+                                        );
+                                }
+                                else
+                                {
+                                    response = "R : Invalid response(invalid argument count)";
+                                }
+                                
+                            }
+                            else
+                            {
+                                response = "R : Error";
+                            }
+                        }
+                        else if (_currentParserType == ParserType.Text)
+                        {
+                            if (result.Response.Arguments?.Count == 1)
+                            {
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                {
+                                    response = "R : Error";
+                                }
+                                else
+                                {
+                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
+                                }
+                            }
+                            else if (result.Response.Arguments?.Count == 4)
+                            {
+                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
+                                {
+                                    response = $"R : OK, {(byte)result.Response.Arguments[1]}, {(double)result.Response.Arguments[2]}, {(double)result.Response.Arguments[3]}";
+                                }
+                                else
+                                {
+                                    response = $"R : Error, {result.Response.Arguments[0]}, {result.Response.Arguments[1]}, {result.Response.Arguments[2]}, {result.Response.Arguments[3]}";
+                                }
+                            }
+                            else
+                            {
+                                response = "R : Invalid response(invalid argument count)";
+                            }
+                        }
+                        else
+                        {
+                            response = "R : Invalid parser type";
+                        }
+                    }
+                    else
+                    {
+                        response = "R : No response";
+                    }
+                }
+                else
+                {
+                    response = "R : Command fail";
+                }
+
+                LbMessageHistory.Items.Add(response);
+            }
+        }
+
         private void ReadHumidity(uint deviceId, byte sensorNum)
         {
             IFwLibMessage command = null;
@@ -941,7 +1056,7 @@ namespace FwLib.NetWpfApp
                 command.Arguments = new List<object>() { sensorNum };
                 CommandResult result = _msgManager.ReadHumidity(command);
 
-                LbMessageHistory.Items.Add($"S : ReadTemperature");
+                LbMessageHistory.Items.Add($"S : ReadTemperatureAndHumidity");
 
                 string response = string.Empty;
                 if (result != null)

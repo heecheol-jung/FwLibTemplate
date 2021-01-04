@@ -175,6 +175,19 @@ namespace FwLib.NetWpfApp.AppUtil
 
             return result;
         }
+
+        public CommandResult ReadTemperatureAndHumidity(IFwLibMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
+            result.Response = (FwLibTxtMessageResponse)response;
+
+            return result;
+        }
         #endregion
 
         #region Private Methods

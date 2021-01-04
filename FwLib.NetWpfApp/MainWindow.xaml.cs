@@ -829,6 +829,7 @@ namespace FwLib.NetWpfApp
                 };
                 ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
                 ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FwLibBinMessageCommand)command).TryInterval = 1000;
             }
             else if (_currentParserType == ParserType.Text)
             {

@@ -34,7 +34,8 @@ namespace FwLib.Net
         WriteGpio = 4,
         ButtonEvent = 5,
         ReadTemperature = 6,
-        ReadHumidity = 7
+        ReadHumidity = 7,
+        ReadTemperatureAndHumidity = 8
     }
 
     public enum FwLibParseState
@@ -157,7 +158,7 @@ namespace FwLib.Net
         public const byte TXT_MSG_MAX_LENGTH = 64;
 
         // FW_LIB_TXT_MSG_MAX_ARG_COUNT
-        public const byte TXT_MSG_MAX_ARG_COUNT = 3;
+        public const byte TXT_MSG_MAX_ARG_COUNT = 4;
 
         //FW_LIB_TXT_MSG_TAIL
         public const char TXT_MSG_TAIL = '\n';
@@ -194,6 +195,7 @@ namespace FwLib.Net
         public const string STR_EBTN = "EBTN";
         public const string STR_RTEMP = "RTEMP";
         public const string STR_RHUM = "RHUM";
+        public const string STR_RTAH = "RTAH";
 
         public static Dictionary<FwLibMessageId, string> MessageIdToStringTable = new Dictionary<FwLibMessageId, string>
         {
@@ -204,7 +206,8 @@ namespace FwLib.Net
             { FwLibMessageId.WriteGpio, STR_WGPIO },
             { FwLibMessageId.ButtonEvent, STR_EBTN },
             { FwLibMessageId.ReadTemperature, STR_RTEMP },
-            { FwLibMessageId.ReadHumidity, STR_RHUM }
+            { FwLibMessageId.ReadHumidity, STR_RHUM },
+            { FwLibMessageId.ReadTemperatureAndHumidity, STR_RTAH }
         };
 
         public static Dictionary<string, FwLibMessageId> StringToMessageIdTable = new Dictionary<string, FwLibMessageId>
@@ -216,7 +219,8 @@ namespace FwLib.Net
             { STR_WGPIO, FwLibMessageId.WriteGpio},
             { STR_EBTN, FwLibMessageId.ButtonEvent},
             { STR_RTEMP, FwLibMessageId.ReadTemperature },
-            { STR_RHUM, FwLibMessageId.ReadHumidity }
+            { STR_RHUM, FwLibMessageId.ReadHumidity },
+            { STR_RTAH, FwLibMessageId.ReadTemperatureAndHumidity }
         };
     }
 }

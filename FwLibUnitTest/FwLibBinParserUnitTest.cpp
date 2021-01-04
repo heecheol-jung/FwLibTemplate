@@ -613,5 +613,101 @@ namespace FwLibUnitTest
       Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
       Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
     }
+
+    TEST_METHOD(TestReadTemperatureAndHumidityCommandParse)
+    {
+      fw_bin_msg_read_dht22_cmd_t* cmd = (fw_bin_msg_read_dht22_cmd_t*)&_packet_buf[1];
+
+      cmd->sensor_number = 3;
+      _len = fw_lib_bin_msg_build_command(2, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, 5, FW_LIB_TRUE, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_bin_parser_parse(&_bin_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _parsed_msg.stx, L"STX should be 0x02.");
+      Assert::AreEqual((uint32_t)2, _parsed_msg.header.device_id, L"device_id field should be 2.");
+      Assert::AreEqual((uint8_t)7, _parsed_msg.header.length, L"length field should be 7.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _parsed_msg.header.message_id, L"message_id should be FW_LIB_MSG_ID_READ_TEMP_AND_HUM.");
+
+      // Flag1
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_COMMAND, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"message_type field should be fw_lib_msg_type_command.");
+      Assert::AreEqual((uint8_t)FW_LIB_TRUE, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"return_expected field should be 1.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"sequence_num field should be 5.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_POS), L"flag1_reserved_mask field should be 0.");
+
+      // Flag2
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 0.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+      fw_bin_msg_read_dht22_cmd_t* parsed_resp = (fw_bin_msg_read_dht22_cmd_t*)&_parsed_msg.header;
+      Assert::AreEqual((uint8_t)3, parsed_resp->sensor_number, L"sensor_number field should be 3.");
+    }
+
+    TEST_METHOD(TestReadTemperatureAndHumidityeOkResponseParse)
+    {
+      fw_bin_msg_read_dht22_temp_hum_resp_t* resp = (fw_bin_msg_read_dht22_temp_hum_resp_t*)&_packet_buf[1];
+
+      resp->sensor_number = 3;
+      resp->temp_value = 123;
+      resp->hum_value = 456;
+      _len = fw_lib_bin_msg_build_response(2, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, 5, FW_LIB_FALSE, FW_LIB_OK, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_bin_parser_parse(&_bin_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _parsed_msg.stx, L"STX should be 0x02.");
+      Assert::AreEqual((uint32_t)2, _parsed_msg.header.device_id, L"device_id field should be 2.");
+      Assert::AreEqual((uint8_t)11, _parsed_msg.header.length, L"length field should be 11.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _parsed_msg.header.message_id, L"message_id should be FW_LIB_MSG_ID_READ_TEMP_AND_HUM.");
+
+      // Flag1
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"message_type field should be fw_lib_msg_type_response.");
+      Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"return_expected field should be 0.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"sequence_num field should be 5.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_POS), L"flag1_reserved_mask field should be 0.");
+
+      // Flag2
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 0.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+      fw_bin_msg_read_dht22_temp_hum_resp_t* parsed_resp = (fw_bin_msg_read_dht22_temp_hum_resp_t*)&_parsed_msg.header;
+      Assert::AreEqual((uint8_t)3, parsed_resp->sensor_number, L"sensor_number field should be 3.");
+      Assert::AreEqual((uint32_t)123, (uint32_t)parsed_resp->temp_value, L"temp_value field should be 123.");
+      Assert::AreEqual((uint32_t)456, (uint32_t)parsed_resp->hum_value, L"hum_value field should be 456.");
+    }
+
+    TEST_METHOD(TestReadTemperatureAdnHumidityErrorResponseParse)
+    {
+      fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
+
+      _len = fw_lib_bin_msg_build_response(2, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, 5, FW_LIB_FALSE, FW_LIB_ERROR, _packet_buf);
+
+      for (_i = 0; _i < _len; _i++)
+      {
+        _ret = fw_lib_bin_parser_parse(&_bin_parser, _packet_buf[_i], &_parsed_msg);
+      }
+
+      Assert::AreEqual((fw_lib_status_t)FW_LIB_OK, _ret, L"Parse result should be FW_LIB_OK.");
+      Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _parsed_msg.stx, L"STX should be 0x02.");
+      Assert::AreEqual((uint32_t)2, _parsed_msg.header.device_id, L"device_id field should be 2.");
+      Assert::AreEqual((uint8_t)6, _parsed_msg.header.length, L"length field should be 6.");
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _parsed_msg.header.message_id, L"message_id should be FW_LIB_MSG_ID_READ_TEMP_AND_HUM.");
+
+      // Flag1
+      Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"message_type field should be fw_lib_msg_type_response.");
+      Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"return_expected field should be 0.");
+      Assert::AreEqual((uint8_t)5, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"sequence_num field should be 5.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag1, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_POS), L"flag1_reserved_mask field should be 0.");
+
+      // Flag2
+      Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
+      Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_parsed_msg.header.flag2, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+    }
 	};
 }

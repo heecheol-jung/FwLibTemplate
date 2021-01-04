@@ -440,5 +440,74 @@ namespace FwLib.NetUnitTest
             Assert.AreEqual((byte)7, (byte)parsedCommand.Arguments[1], "Arguments[1] should be 7.");
             Assert.AreEqual((double)23.4, (double)parsedCommand.Arguments[2], "Arguments[2] should be 23.4.");
         }
+
+        [TestMethod]
+        public void TestReadTemperatureAndHumidityCommandMessageParse()
+        {
+            _message = new FwLibTxtMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadTemperatureAndHumidity,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "7"     // Sensor number
+                }
+            };
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref _message);
+
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.ParseCommand(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibTxtMessageCommand parsedCommand = (FwLibTxtMessageCommand)_parsedMessage;
+
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual(FwLibMessageType.Text, parsedCommand.MessageType, "Message type field should be text.");
+            Assert.AreEqual(FwLibMessageCategory.Command, parsedCommand.MessageCategory, "Message category should be command.");
+            Assert.AreEqual(FwLibMessageId.ReadTemperatureAndHumidity, parsedCommand.MessageId, "Message Id should be ReadTemperatureAndHumidity.");
+            Assert.AreEqual((uint)6, parsedCommand.DeviceId, "Device ID should 6.");
+            Assert.IsNotNull(parsedCommand.Arguments, "Message arguments should not be null.");
+            Assert.AreEqual(1, parsedCommand.Arguments.Count, "The number of message arguments should be 1.");
+            Assert.AreEqual((byte)7, (byte)parsedCommand.Arguments[0], "Arguments[0] should be 7.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureAndHumidityOkResponsedMessageParse()
+        {
+            _message = new FwLibTxtMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperatureAndHumidity,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "0",    // Return code
+                    "7",    // Sensor number
+                    "12.3", // Temperature value
+                    "23.4"  // Humidity value
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref _message);
+
+            for (int i = 0; i < _message.Buffer.Length; i++)
+            {
+                _parseResult = _parser.ParseResponseEvent(_message.Buffer[i], out _parsedMessage);
+            }
+
+            FwLibTxtMessageResponse parsedCommand = (FwLibTxtMessageResponse)_parsedMessage;
+
+            Assert.AreEqual(FwLibParseState.ParseOk, _parseResult, "Parse result should be ParseOk.");
+            Assert.AreEqual(FwLibMessageType.Text, parsedCommand.MessageType, "Message type field should be text.");
+            Assert.AreEqual(FwLibMessageCategory.Response, parsedCommand.MessageCategory, "Message category should be response.");
+            Assert.AreEqual(FwLibMessageId.ReadTemperatureAndHumidity, parsedCommand.MessageId, "Message Id should be ReadTemperatureAndHumidity.");
+            Assert.AreEqual((uint)6, parsedCommand.DeviceId, "Device ID should 3.");
+            Assert.IsNotNull(parsedCommand.Arguments, "Message arguments should not be null.");
+            Assert.AreEqual(4, parsedCommand.Arguments.Count, "The number of message arguments should be 4.");
+            Assert.AreEqual((byte)0, (byte)parsedCommand.Arguments[0], "Arguments[0] should be 0.");
+            Assert.AreEqual((byte)7, (byte)parsedCommand.Arguments[1], "Arguments[1] should be 7.");
+            Assert.AreEqual((double)12.3, (double)parsedCommand.Arguments[2], "Arguments[2] should be 12.3.");
+            Assert.AreEqual((double)23.4, (double)parsedCommand.Arguments[3], "Arguments[3] should be 23.4.");
+        }
     }
 }

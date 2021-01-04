@@ -417,7 +417,8 @@ namespace FwLib.Net
                 }
             }
             else if ((_msgId == FwLibMessageId.ReadTemperature) ||
-                     (_msgId == FwLibMessageId.ReadHumidity))
+                     (_msgId == FwLibMessageId.ReadHumidity) ||
+                     (_msgId == FwLibMessageId.ReadTemperatureAndHumidity))
             {
                 if (_arguments.Count < 1)
                 {
@@ -552,6 +553,33 @@ namespace FwLib.Net
                     }
                 }
             }
+            else if (_msgId == FwLibMessageId.ReadTemperatureAndHumidity)
+            {
+                if (_arguments.Count < 2)
+                {
+                    if (GetByteData(out byte byteData) == true)
+                    {
+                        _arguments.Add(byteData);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (_arguments.Count < 4)
+                {
+                    if (GetDoubleData(out double dblData) == true)
+                    {
+                        _arguments.Add(dblData);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
 
             return false;
         }
@@ -603,6 +631,7 @@ namespace FwLib.Net
                 case FwLibMessageId.WriteGpio:
                 case FwLibMessageId.ReadTemperature:
                 case FwLibMessageId.ReadHumidity:
+                case FwLibMessageId.ReadTemperatureAndHumidity:
                     return true;
             }
             return false;

@@ -982,5 +982,151 @@ namespace FwLibUnitTest
 			// ETX
 			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
 		}
+
+		TEST_METHOD(TestReadTemperatureAndHumidityCommandMessageBuild)
+		{
+			fw_bin_msg_read_dht22_cmd_t* cmd = (fw_bin_msg_read_dht22_cmd_t*)&_packet_buf[1];
+
+			cmd->sensor_number = 3;
+			_len = fw_lib_bin_msg_build_command(2, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, 5, FW_LIB_TRUE, _packet_buf);
+
+			Assert::AreEqual((uint8_t)13, _len, L"Packet length should be 13 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)2, _packet_buf[4], L"device_id field(byte4) should be 2.");
+
+			// Length
+			Assert::AreEqual((uint8_t)7, _packet_buf[5], L"length field should 7.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_READ_TEMP_AND_HUM.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)5, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 5.");
+			Assert::AreEqual((uint8_t)FW_LIB_TRUE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 1.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_COMMAND, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.messate_type should be fw_lib_msg_type_command.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RESERVED_POS), L"flag1.reserved should be 0.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 0.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// Sensor number
+			Assert::AreEqual((uint8_t)3, _packet_buf[9], L"Sensor number should be 3.");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)cmd, sizeof(fw_bin_msg_read_dht22_cmd_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[10]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x27, _packet_buf[10], L"CRC16 byte1 should be 0x27.");
+			Assert::AreEqual((uint8_t)0x12, _packet_buf[11], L"CRC16 byte1 should be 0x12.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[12], L"ETX should be 0x03.");
+		}
+
+		TEST_METHOD(TestReadTemperatureAndHumidityOkResponseMessageBuild)
+		{
+			fw_bin_msg_read_dht22_temp_hum_resp_t* resp = (fw_bin_msg_read_dht22_temp_hum_resp_t*)&_packet_buf[1];
+
+			resp->sensor_number = 3;
+			resp->temp_value = 123;
+			resp->hum_value = 456;
+			_len = fw_lib_bin_msg_build_response(2, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, 5, FW_LIB_FALSE, FW_LIB_OK, _packet_buf);
+
+			Assert::AreEqual((uint8_t)17, _len, L"Packet length should be 17 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)2, _packet_buf[4], L"device_id field(byte4) should be 2.");
+
+			// Length
+			Assert::AreEqual((uint8_t)11, _packet_buf[5], L"length field should 11.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_READ_TEMP_AND_HUM.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)5, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 5.");
+			Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 0.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.message_type should be fw_lib_msg_type_response.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 0.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// Sensor number
+			Assert::AreEqual((uint8_t)3, _packet_buf[9], L"Sensor number should be 3.");
+			// Temperature value
+			Assert::AreEqual((uint8_t)0x7B, _packet_buf[10], L"Temperature number should be 0x7B.");
+			Assert::AreEqual((uint8_t)0x00, _packet_buf[11], L"Temperature number should be 0x00");
+			// Humidity value
+			Assert::AreEqual((uint8_t)0xC8, _packet_buf[12], L"Sensor number should be 0xC8.");
+			Assert::AreEqual((uint8_t)0x01, _packet_buf[13], L"Sensor number should be 0x01");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)&_packet_buf[1], sizeof(fw_bin_msg_read_dht22_temp_hum_resp_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[14]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x39, _packet_buf[14], L"CRC16 byte1 should be 0x39.");
+			Assert::AreEqual((uint8_t)0x1C, _packet_buf[15], L"CRC16 byte1 should be 0x1C.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[16], L"ETX should be 0x03.");
+		}
+
+		TEST_METHOD(TestReadTemperatureAndHumidityErrorResponseMessageBuild)
+		{
+			fw_lib_bin_msg_header_t* resp = (fw_lib_bin_msg_header_t*)&_packet_buf[1];
+
+			_len = fw_lib_bin_msg_build_response(2, FW_LIB_MSG_ID_READ_TEMP_AND_HUM, 5, FW_LIB_FALSE, FW_LIB_ERROR, _packet_buf);
+
+			Assert::AreEqual((uint8_t)12, _len, L"Packet length should be 12 bytes.");
+			// STX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_STX, _packet_buf[0], L"STX should be 0x02.");
+
+			// Device ID
+			Assert::AreEqual((uint8_t)0, _packet_buf[1], L"device_id field(byte1) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[2], L"device_id field(byte2) should be 0.");
+			Assert::AreEqual((uint8_t)0, _packet_buf[3], L"device_id field(byte3) should be 0.");
+			Assert::AreEqual((uint8_t)2, _packet_buf[4], L"device_id field(byte4) should be 2.");
+
+			// Length
+			Assert::AreEqual((uint8_t)6, _packet_buf[5], L"length field should 6.");
+
+			// Message ID
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_ID_READ_TEMP_AND_HUM, _packet_buf[6], L"message_id should be FW_LIB_MSG_ID_READ_TEMP_AND_HUM.");
+
+			// Flag1
+			Assert::AreEqual((uint8_t)5, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_MASK, FW_LIB_BIN_MSG_HDR_FLG1_SEQ_NUM_POS), L"flag1.sequence_number field should be 5.");
+			Assert::AreEqual((uint8_t)FW_LIB_FALSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_MASK, FW_LIB_BIN_MSG_HDR_FLG1_RET_EXPECTED_POS), L"flag1.return_expected field should be 0.");
+			Assert::AreEqual((uint8_t)FW_LIB_MSG_TYPE_RESPONSE, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[7], FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_MASK, FW_LIB_BIN_MSG_HDR_FLG1_MSG_TYPE_POS), L"flag1.message_type should be fw_lib_msg_type_response.");
+
+			// Flag2
+			Assert::AreEqual((uint8_t)1, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_ERROR_MASK, FW_LIB_BIN_MSG_HDR_FLG2_ERROR_POS), L"flag2.error should be 1.");
+			Assert::AreEqual((uint8_t)0, (uint8_t)FW_LIB_BIT_FIELD_GET(_packet_buf[8], FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_MASK, FW_LIB_BIN_MSG_HDR_FLG2_RESERVED_POS), L"flag2.reserved should be 0.");
+
+			// CRC
+			_expected_crc = fw_lib_crc_16((const unsigned char*)&_packet_buf[1], sizeof(fw_lib_bin_msg_header_t));
+			_expected_crc = FW_LIB_SWAP_2BYTES(_expected_crc);
+			_actual_crc = *((uint16_t*)&_packet_buf[9]);
+			Assert::AreEqual((uint32_t)_expected_crc, (uint32_t)_actual_crc, L"CRC16 should be matched.");
+			Assert::AreEqual((uint8_t)0x7B, _packet_buf[9], L"CRC16 byte1 should be 0x7B.");
+			Assert::AreEqual((uint8_t)0x3D, _packet_buf[10], L"CRC16 byte1 should be 0x3D.");
+
+			// ETX
+			Assert::AreEqual((uint8_t)FW_LIB_BIN_MSG_ETX, _packet_buf[11], L"ETX should be 0x03.");
+		}
 	};
 }

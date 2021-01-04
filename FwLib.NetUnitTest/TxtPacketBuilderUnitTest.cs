@@ -279,5 +279,48 @@ namespace FwLib.NetUnitTest
             expectedPacket = Encoding.ASCII.GetBytes(commandString);
             CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
         }
+
+        [TestMethod]
+        public void TestReadTemperatureAndHumidityCommandMessageBuild()
+        {
+            message = new FwLibTxtMessageCommand()
+            {
+                MessageId = FwLibMessageId.ReadTemperatureAndHumidity,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "7"     // Sensor number
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+
+            commandString = "RTAH 6,7\n";
+            expectedPacket = Encoding.ASCII.GetBytes(commandString);
+            CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
+        }
+
+        [TestMethod]
+        public void TestReadTemperatureAndHumidityOkResponsedMessageBuild()
+        {
+            message = new FwLibTxtMessageResponse()
+            {
+                MessageId = FwLibMessageId.ReadTemperatureAndHumidity,
+                DeviceId = 6,
+                Arguments = new List<object>()
+                {
+                    "0",    // Return code
+                    "7",    // Sensor number
+                    "12.3", // Temperature value
+                    "23.4"  // Humidity value
+                }
+            };
+
+            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+
+            commandString = "RTAH 6,0,7,12.3,23.4\n";
+            expectedPacket = Encoding.ASCII.GetBytes(commandString);
+            CollectionAssert.AreEqual(expectedPacket, message.Buffer, "Result packet should be matched.");
+        }
     }
 }

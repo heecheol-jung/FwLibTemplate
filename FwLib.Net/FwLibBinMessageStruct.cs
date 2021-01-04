@@ -188,24 +188,18 @@ namespace FwLib.Net
         public FwLibBinMessageTailStruct Tail;
     }
 
+    //fw_bin_msg_read_dht22_cmd_t
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FwLibBinMessageReadTemperatureCommandStruct
+    public struct FwLibBinMessageReadDht22CommandStruct
     {
         public FwLibBinMessageHeaderStruct Header;
         public byte SensorNumber;
         public FwLibBinMessageTailStruct Tail;
     }
 
+    //fw_bin_msg_read_dht22_resp_t
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FwLibBinMessageReadHumidityCommandStruct
-    {
-        public FwLibBinMessageHeaderStruct Header;
-        public byte SensorNumber;
-        public FwLibBinMessageTailStruct Tail;
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FwLibBinMessageReadTemperatureResponseStruct
+    public struct FwLibBinMessageReadDht22ResponseStruct
     {
         public FwLibBinMessageHeaderStruct Header;
         public byte SensorNumber;
@@ -213,12 +207,14 @@ namespace FwLib.Net
         public FwLibBinMessageTailStruct Tail;
     }
 
+    // fw_bin_msg_read_dht22_temp_hum_resp_t
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct FwLibBinMessageReadHumidityResponseStruct
+    public struct FwLibBinMessageReadDht22TempHumResponseStruct
     {
         public FwLibBinMessageHeaderStruct Header;
         public byte SensorNumber;
-        public UInt16 SensorValue;
+        public UInt16 Temperature;
+        public UInt16 Humidity;
         public FwLibBinMessageTailStruct Tail;
     }
 }

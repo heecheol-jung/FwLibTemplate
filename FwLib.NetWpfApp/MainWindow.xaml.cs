@@ -1,4 +1,5 @@
-﻿using FwLib.Net;
+﻿using Fl.Net;
+using Fl.Net.Message;
 using FwLib.NetWpfApp.AppControl;
 using FwLib.NetWpfApp.AppUtil;
 using log4net;
@@ -24,9 +25,9 @@ namespace FwLib.NetWpfApp
         private IMessageManager _msgManager = null;
         private ILog _logger = null;
         private uint _deviceId = 1;
-        private byte _sequenceNumber = FwLibConstant.BIN_MSG_MIN_SEQUENCE;
+        private byte _sequenceNumber = FlConstant.FL_BIN_MSG_MIN_SEQUENCE;
         private List<UcArgumentTemplate> _argTemplates = new List<UcArgumentTemplate>();
-        private List<IFwLibMessage> _eventQ = new List<IFwLibMessage>();
+        private List<IFlMessage> _eventQ = new List<IFlMessage>();
         private DispatcherTimer _eventTimer = new DispatcherTimer();
         private object _lock = new object();
         private ParserType _currentParserType = ParserType.Unknown;
@@ -47,10 +48,10 @@ namespace FwLib.NetWpfApp
             _eventTimer.Interval = TimeSpan.FromMilliseconds(100);
             _eventTimer.Tick += Event_Tick;
 
-            _msgTemplates = FwLibUtil.GetMessageTemplates();
+            _msgTemplates = InternalUtil.GetMessageTemplates();
 
             var distinctMsgIds = (from msgTemplate in _msgTemplates
-                                  where (msgTemplate.MessageType == FwLibMessageCategory.Command)
+                                  where (msgTemplate.MessageType == FlMessageCategory.Command)
                                   select msgTemplate.MessageIdForCApi).Distinct();
             foreach (var msgId in distinctMsgIds)
             {
@@ -112,7 +113,7 @@ namespace FwLib.NetWpfApp
                     if (_currentParserType == ParserType.Binary)
                     {
                         _msgManager = new BinMessageManager();
-                        _sequenceNumber = FwLibConstant.BIN_MSG_MIN_SEQUENCE;
+                        _sequenceNumber = FlConstant.FL_BIN_MSG_MIN_SEQUENCE;
                     }
                     else if (_currentParserType == ParserType.Text)
                     {
@@ -194,7 +195,7 @@ namespace FwLib.NetWpfApp
                 if (CmbMessageId.SelectedIndex >= 0)
                 {
                     var selectedMsgTemplates = (from item in _msgTemplates
-                                                where (item.MessageIdForCApi == (string)CmbMessageId.SelectedItem && item.MessageType == FwLibMessageCategory.Command)
+                                                where (item.MessageIdForCApi == (string)CmbMessageId.SelectedItem && item.MessageType == FlMessageCategory.Command)
                                                 select item).SingleOrDefault();
 
 
@@ -231,17 +232,17 @@ namespace FwLib.NetWpfApp
 
                 switch (_selectedMsgTemplate.MessageId)
                 {
-                    case FwLibMessageId.ReadHardwareVersion:
+                    case FlMessageId.ReadHardwareVersion:
                         validArguments = true;
                         ReadHardwareVersion(deviceId);
                         break;
 
-                    case FwLibMessageId.ReadFirmwareVersion:
+                    case FlMessageId.ReadFirmwareVersion:
                         validArguments = true;
                         ReadFirmwareVersion(deviceId);
                         break;
 
-                    case FwLibMessageId.WriteGpio:
+                    case FlMessageId.WriteGpio:
                         {
                             UcArgumentTemplate argGpioNum = (UcArgumentTemplate)SpArguments.Children[0];
                             UcArgumentTemplate argGpioValue = (UcArgumentTemplate)SpArguments.Children[1];
@@ -279,7 +280,7 @@ namespace FwLib.NetWpfApp
                         }
                         break;
 
-                    case FwLibMessageId.ReadGpio:
+                    case FlMessageId.ReadGpio:
                         {
                             UcArgumentTemplate argGpioNum = (UcArgumentTemplate)SpArguments.Children[0];
                             if (string.IsNullOrEmpty(argGpioNum.ArgValue) == true)
@@ -300,9 +301,9 @@ namespace FwLib.NetWpfApp
                         }
                         break;
 
-                    case FwLibMessageId.ReadTemperature:
-                    case FwLibMessageId.ReadHumidity:
-                    case FwLibMessageId.ReadTemperatureAndHumidity:
+                    case FlMessageId.ReadTemperature:
+                    case FlMessageId.ReadHumidity:
+                    case FlMessageId.ReadTempAndHum:
                         {
                             UcArgumentTemplate argSensorNum = (UcArgumentTemplate)SpArguments.Children[0];
                             if (string.IsNullOrEmpty(argSensorNum.ArgValue) == true)
@@ -319,17 +320,17 @@ namespace FwLib.NetWpfApp
 
 
                             validArguments = true;
-                            if (_selectedMsgTemplate.MessageId == FwLibMessageId.ReadTemperature)
+                            if (_selectedMsgTemplate.MessageId == FlMessageId.ReadTemperature)
                             {
                                 ReadTemperature(deviceId, sensorNum);
                             }
-                            else if (_selectedMsgTemplate.MessageId == FwLibMessageId.ReadHumidity)
+                            else if (_selectedMsgTemplate.MessageId == FlMessageId.ReadHumidity)
                             {
                                 ReadHumidity(deviceId, sensorNum);
                             }
-                            else if (_selectedMsgTemplate.MessageId == FwLibMessageId.ReadTemperatureAndHumidity)
+                            else if (_selectedMsgTemplate.MessageId == FlMessageId.ReadTempAndHum)
                             {
-                                ReadTemperatureAndHumidity(deviceId, sensorNum);
+                                ReadTempAndHum(deviceId, sensorNum);
                             }
                             
                         }
@@ -362,11 +363,11 @@ namespace FwLib.NetWpfApp
 
         private void Event_Tick(object sender, EventArgs e)
         {
-            List<IFwLibMessage> events;
+            List<IFlMessage> events;
 
             lock (_lock)
             {
-                events = new List<IFwLibMessage>();
+                events = new List<IFlMessage>();
                 events.AddRange(_eventQ);
                 _eventQ.Clear();
             }
@@ -377,9 +378,9 @@ namespace FwLib.NetWpfApp
 
                 if (evt != null)
                 {
-                    if (evt.MessageId == FwLibMessageId.ButtonEvent)
+                    if (evt.MessageId == FlMessageId.ButtonEvent)
                     {
-                        if (evt.MessageType == FwLibMessageType.Binary)
+                        if (evt.MessageType == FlMessageType.Binary)
                         {
                             if (evt.Arguments?.Count == 2)
                             {
@@ -391,7 +392,7 @@ namespace FwLib.NetWpfApp
                                 message = "E : Invalid button event(invalid argument count)";
                             }
                         }
-                        else if (evt.MessageType == FwLibMessageType.Text)
+                        else if (evt.MessageType == FlMessageType.Text)
                         {
                             if (evt.Arguments?.Count == 2)
                             {
@@ -416,7 +417,7 @@ namespace FwLib.NetWpfApp
         #endregion
 
         #region Private Methods
-        private void OnEventMessageReceived(object sender, IFwLibMessage evt)
+        private void OnEventMessageReceived(object sender, IFlMessage evt)
         {
             lock (_lock)
             {
@@ -427,9 +428,9 @@ namespace FwLib.NetWpfApp
         private byte NextSequenceNumber()
         {
             _sequenceNumber++;
-            if (_sequenceNumber > FwLibConstant.BIN_MSG_MAX_SEQUENCE)
+            if (_sequenceNumber > FlConstant.FL_BIN_MSG_MAX_SEQUENCE)
             {
-                _sequenceNumber = FwLibConstant.BIN_MSG_MIN_SEQUENCE;
+                _sequenceNumber = FlConstant.FL_BIN_MSG_MIN_SEQUENCE;
             }
 
             return _sequenceNumber;
@@ -437,23 +438,26 @@ namespace FwLib.NetWpfApp
 
         private void ReadHardwareVersion(uint deviceId)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadHardwareVersion
+                    MessageId = FlMessageId.ReadHardwareVersion
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadHardwareVersion,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.ReadHardwareVersion,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString()
+                    }
                 };
             }
             
@@ -470,7 +474,7 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == FwLibConstant.OK)
+                            if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
                             {
                                 if (result.Response.Arguments?.Count == 3)
                                 {
@@ -489,31 +493,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 3)
                             {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
-                                    response = "R : Error";
+                                    response = $"R : OK, {(string)result.Response.Arguments[2]}";
                                 }
                                 else
                                 {
-                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
-                                }
-                            }
-                            else if (result.Response.Arguments?.Count == 2)
-                            {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
-                                {
-                                    response = $"R : OK, {(string)result.Response.Arguments[1]}";
-                                }
-                                else
-                                {
-                                    response = $"R : Error - {result.Response.Arguments[0]}, {result.Response.Arguments[1]}";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else
@@ -535,25 +528,44 @@ namespace FwLib.NetWpfApp
             }
         }
 
+        private string GetArgumentString(List<object> arguments)
+        {
+            string argString = string.Empty;
+
+            for (int i = 0; i < arguments?.Count; i++)
+            {
+                argString += arguments[i];
+                if (arguments.Count > 1)
+                {
+                    argString += ", ";
+                }
+            }
+
+            return argString;
+        }
+
         private void ReadFirmwareVersion(uint deviceId)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadFirmwareVersion
+                    MessageId = FlMessageId.ReadFirmwareVersion
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadFirmwareVersion,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.ReadFirmwareVersion,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString()
+                    }
                 };
             }
 
@@ -570,7 +582,7 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == FwLibConstant.OK)
+                            if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
                             {
                                 if (result.Response.Arguments?.Count == 3)
                                 {
@@ -588,31 +600,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 3)
                             {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
-                                    response = "R : Error";
+                                    response = $"R : OK, {(string)result.Response.Arguments[2]}";
                                 }
                                 else
                                 {
-                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
-                                }
-                            }
-                            else if (result.Response.Arguments?.Count == 2)
-                            {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
-                                {
-                                    response = $"R : OK, {(string)result.Response.Arguments[1]}";
-                                }
-                                else
-                                {
-                                    response = $"R : Error - {result.Response.Arguments[0]}, {result.Response.Arguments[1]}";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else
@@ -636,29 +637,33 @@ namespace FwLib.NetWpfApp
 
         private void WriteGpio(uint deviceId, byte gpioNum, byte gpioValue)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.WriteGpio
+                    MessageId = FlMessageId.WriteGpio
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.WriteGpio,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.WriteGpio,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString(),
+                        gpioNum.ToString(),
+                        gpioValue.ToString()
+                    }
                 };
             }
 
             if (command != null)
             {
-                command.Arguments = new List<object>() { gpioNum, gpioValue };
                 CommandResult result = _msgManager.WriteGpio(command);
 
                 LbMessageHistory.Items.Add($"S : WriteGpio");
@@ -670,7 +675,7 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            if (((FwLibBinMessageResponse)(result.Response)).Header.Error == FwLibConstant.OK)
+                            if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
                             {
                                 response = $"R : OK";
                             }
@@ -681,20 +686,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 2)
                             {
-                                if ((byte)result.Response.Arguments[0] == 0)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
                                     response = $"R : OK";
                                 }
                                 else
                                 {
-                                    response = $"R : Error";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else
@@ -718,29 +723,32 @@ namespace FwLib.NetWpfApp
 
         private void ReadGpio(uint deviceId, byte gpioNum)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadGpio
+                    MessageId = FlMessageId.ReadGpio
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadGpio,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.ReadGpio,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString(),
+                        gpioNum.ToString()
+                    }
                 };
             }
 
             if (command != null)
             {
-                command.Arguments = new List<object>() { gpioNum };
                 CommandResult result = _msgManager.ReadGpio(command);
 
                 LbMessageHistory.Items.Add($"S : ReadGpio");
@@ -752,8 +760,8 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            FwLibBinMessageResponse resp = (FwLibBinMessageResponse)result.Response;
-                            if (resp.Header.Error == FwLibConstant.OK)
+                            FlBinMessageResponse resp = (FlBinMessageResponse)result.Response;
+                            if (resp.Header.flag2.error == FlConstant.FL_OK)
                             {
                                 if (result.Response.Arguments?.Count == 2)
                                 {
@@ -771,31 +779,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 4)
                             {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
-                                    response = "R : Error";
+                                    response = $"R : OK, {(string)result.Response.Arguments[2]}, {(string)result.Response.Arguments[3]}";
                                 }
                                 else
                                 {
-                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
-                                }
-                            }
-                            else if (result.Response.Arguments?.Count == 3)
-                            {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
-                                {
-                                    response = $"R : OK, {(byte)result.Response.Arguments[1]}, {(byte)result.Response.Arguments[2]}";
-                                }
-                                else
-                                {
-                                    response = $"R : Error, {result.Response.Arguments[0]}, {result.Response.Arguments[1]}, {result.Response.Arguments[2]}";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else
@@ -819,30 +816,33 @@ namespace FwLib.NetWpfApp
 
         private void ReadTemperature(uint deviceId, byte sensorNum)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadTemperature
+                    MessageId = FlMessageId.ReadTemperature
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
-                ((FwLibBinMessageCommand)command).TryInterval = 1000;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
+                ((FlBinMessageCommand)command).TryInterval = 1000;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadTemperature,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.ReadTemperature,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString(),
+                        sensorNum.ToString()
+                    }
                 };
             }
 
             if (command != null)
             {
-                command.Arguments = new List<object>() { sensorNum };
                 CommandResult result = _msgManager.ReadTemperature(command);
 
                 LbMessageHistory.Items.Add($"S : ReadTemperature");
@@ -854,8 +854,8 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            FwLibBinMessageResponse resp = (FwLibBinMessageResponse)result.Response;
-                            if (resp.Header.Error == FwLibConstant.OK)
+                            FlBinMessageResponse resp = (FlBinMessageResponse)result.Response;
+                            if (resp.Header.flag2.error == FlConstant.FL_OK)
                             {
                                 if (result.Response.Arguments?.Count == 2)
                                 {
@@ -874,31 +874,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 4)
                             {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
-                                    response = "R : Error";
+                                    response = $"R : OK, {(string)result.Response.Arguments[2]}, {(string)result.Response.Arguments[3]}";
                                 }
                                 else
                                 {
-                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
-                                }
-                            }
-                            else if (result.Response.Arguments?.Count == 3)
-                            {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
-                                {
-                                    response = $"R : OK, {(byte)result.Response.Arguments[1]}, {(double)result.Response.Arguments[2]}";
-                                }
-                                else
-                                {
-                                    response = $"R : Error, {result.Response.Arguments[0]}, {result.Response.Arguments[1]}, {result.Response.Arguments[2]}";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else
@@ -920,31 +909,34 @@ namespace FwLib.NetWpfApp
             }
         }
 
-        private void ReadTemperatureAndHumidity(uint deviceId, byte sensorNum)
+        private void ReadTempAndHum(uint deviceId, byte sensorNum)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadTemperatureAndHumidity
+                    MessageId = FlMessageId.ReadTempAndHum
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadTemperatureAndHumidity,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.ReadTempAndHum,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString(),
+                        sensorNum.ToString()
+                    }
                 };
             }
 
             if (command != null)
             {
-                command.Arguments = new List<object>() { sensorNum };
                 CommandResult result = _msgManager.ReadTemperatureAndHumidity(command);
 
                 LbMessageHistory.Items.Add($"S : ReadTemperature");
@@ -956,8 +948,8 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            FwLibBinMessageResponse resp = (FwLibBinMessageResponse)result.Response;
-                            if (resp.Header.Error == FwLibConstant.OK)
+                            FlBinMessageResponse resp = (FlBinMessageResponse)result.Response;
+                            if (resp.Header.flag2.error == FlConstant.FL_OK)
                             {
                                 if (result.Response.Arguments?.Count == 3)
                                 {
@@ -983,31 +975,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 5)
                             {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
-                                    response = "R : Error";
+                                    response = $"R : OK, {(string)result.Response.Arguments[2]}, {(string)result.Response.Arguments[3]}, {(string)result.Response.Arguments[4]}";
                                 }
                                 else
                                 {
-                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
-                                }
-                            }
-                            else if (result.Response.Arguments?.Count == 4)
-                            {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
-                                {
-                                    response = $"R : OK, {(byte)result.Response.Arguments[1]}, {(double)result.Response.Arguments[2]}, {(double)result.Response.Arguments[3]}";
-                                }
-                                else
-                                {
-                                    response = $"R : Error, {result.Response.Arguments[0]}, {result.Response.Arguments[1]}, {result.Response.Arguments[2]}, {result.Response.Arguments[3]}";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else
@@ -1031,32 +1012,35 @@ namespace FwLib.NetWpfApp
 
         private void ReadHumidity(uint deviceId, byte sensorNum)
         {
-            IFwLibMessage command = null;
+            IFlMessage command = null;
 
             if (_currentParserType == ParserType.Binary)
             {
-                command = new FwLibBinMessageCommand()
+                command = new FlBinMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadHumidity
+                    MessageId = FlMessageId.ReadHumidity
                 };
-                ((FwLibBinMessageCommand)command).Header.DeviceId = deviceId;
-                ((FwLibBinMessageCommand)command).Header.SequenceNumber = _sequenceNumber;
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
             }
             else if (_currentParserType == ParserType.Text)
             {
-                command = new FwLibTxtMessageCommand()
+                command = new FlTxtMessageCommand()
                 {
-                    MessageId = FwLibMessageId.ReadHumidity,
-                    DeviceId = deviceId
+                    MessageId = FlMessageId.ReadHumidity,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString(),
+                        sensorNum.ToString()
+                    }
                 };
             }
 
             if (command != null)
             {
-                command.Arguments = new List<object>() { sensorNum };
                 CommandResult result = _msgManager.ReadHumidity(command);
 
-                LbMessageHistory.Items.Add($"S : ReadTemperatureAndHumidity");
+                LbMessageHistory.Items.Add($"S : ReadTempAndHum");
 
                 string response = string.Empty;
                 if (result != null)
@@ -1065,8 +1049,8 @@ namespace FwLib.NetWpfApp
                     {
                         if (_currentParserType == ParserType.Binary)
                         {
-                            FwLibBinMessageResponse resp = (FwLibBinMessageResponse)result.Response;
-                            if (resp.Header.Error == FwLibConstant.OK)
+                            FlBinMessageResponse resp = (FlBinMessageResponse)result.Response;
+                            if (resp.Header.flag2.error == FlConstant.FL_OK)
                             {
                                 if (result.Response.Arguments?.Count == 2)
                                 {
@@ -1085,31 +1069,20 @@ namespace FwLib.NetWpfApp
                         }
                         else if (_currentParserType == ParserType.Text)
                         {
-                            if (result.Response.Arguments?.Count == 1)
+                            if (result.Response.Arguments?.Count == 4)
                             {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.ERROR)
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
                                 {
-                                    response = "R : Error";
+                                    response = $"R : OK, {(string)result.Response.Arguments[2]}, {(string)result.Response.Arguments[3]}";
                                 }
                                 else
                                 {
-                                    response = $"R : Return value - {(byte)result.Response.Arguments[0]}";
-                                }
-                            }
-                            else if (result.Response.Arguments?.Count == 3)
-                            {
-                                if ((byte)result.Response.Arguments[0] == FwLibConstant.OK)
-                                {
-                                    response = $"R : OK, {(byte)result.Response.Arguments[1]}, {(double)result.Response.Arguments[2]}";
-                                }
-                                else
-                                {
-                                    response = $"R : Error, {result.Response.Arguments[0]}, {result.Response.Arguments[1]}, {result.Response.Arguments[2]}";
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
                                 }
                             }
                             else
                             {
-                                response = "R : Invalid response(invalid argument count)";
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
                             }
                         }
                         else

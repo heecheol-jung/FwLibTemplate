@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FwLib.Net\FwLib.Net.csproj" />
+    <ProjectReference Include="..\Fl.Net\Fl.Net.csproj" />
   </ItemGroup>
 
   <ItemGroup>

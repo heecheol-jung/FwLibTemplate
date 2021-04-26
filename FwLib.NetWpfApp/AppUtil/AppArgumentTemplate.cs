@@ -1,7 +1,7 @@
 ﻿
 namespace FwLib.NetWpfApp.AppUtil
 {
-    public class FwLibArgumentTemplate
+    public class AppArgumentTemplate
     {
         public string Name { get; set; }
         public string DataType { get; set; }

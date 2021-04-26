@@ -19,12 +19,11 @@ namespace FwLib.NetWpfApp
     public partial class MainWindow : Window
     {
         #region Private Data
-        private List<FwLibMessageTemplate> _msgTemplates = null;
-        private FwLibMessageTemplate _selectedMsgTemplate = null;
+        private List<AppMessageTemplate> _msgTemplates = null;
+        private AppMessageTemplate _selectedMsgTemplate = null;
         private int _lastSelectedMsgId = -1;
         private IMessageManager _msgManager = null;
         private ILog _logger = null;
-        private uint _deviceId = 1;
         private byte _sequenceNumber = FlConstant.FL_BIN_MSG_MIN_SEQUENCE;
         private List<UcArgumentTemplate> _argTemplates = new List<UcArgumentTemplate>();
         private List<IFlMessage> _eventQ = new List<IFlMessage>();
@@ -335,6 +334,28 @@ namespace FwLib.NetWpfApp
                             
                         }
                         break;
+
+                    case FlMessageId.BootMode:
+                        {
+                            UcArgumentTemplate artBootMode = (UcArgumentTemplate)SpArguments.Children[0];
+                            
+                            if (byte.TryParse(artBootMode.ArgValue, out byte bootMode) != true)
+                            {
+                                MessageBox.Show("Invalid boot mode.");
+                                break;
+                            }
+
+                            validArguments = true;
+                            BootMode(deviceId, bootMode);
+                        }
+                        break;
+
+                    case FlMessageId.Reset:
+                        {
+                            validArguments = true;
+                            Reset(deviceId);
+                        }
+                        break;
                 }
 
                 if (_currentParserType == ParserType.Binary)
@@ -476,9 +497,9 @@ namespace FwLib.NetWpfApp
                         {
                             if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
                             {
-                                if (result.Response.Arguments?.Count == 3)
+                                if (result.Response.Arguments?.Count == 1)
                                 {
-                                    response = $"R : {(byte)result.Response.Arguments[0]}.{(byte)result.Response.Arguments[1]}.{(byte)result.Response.Arguments[2]}";
+                                    response = $"R : {(string)result.Response.Arguments[0]}";
 
                                 }
                                 else
@@ -584,9 +605,9 @@ namespace FwLib.NetWpfApp
                         {
                             if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
                             {
-                                if (result.Response.Arguments?.Count == 3)
+                                if (result.Response.Arguments?.Count == 1)
                                 {
-                                    response = $"R : {(byte)result.Response.Arguments[0]}.{(byte)result.Response.Arguments[1]}.{(byte)result.Response.Arguments[2]}";
+                                    response = $"R : {(string)result.Response.Arguments[0]}";
                                 }
                                 else
                                 {
@@ -643,7 +664,12 @@ namespace FwLib.NetWpfApp
             {
                 command = new FlBinMessageCommand()
                 {
-                    MessageId = FlMessageId.WriteGpio
+                    MessageId = FlMessageId.WriteGpio,
+                    Arguments = new List<object>()
+                    {
+                        gpioNum,
+                        gpioValue
+                    }
                 };
                 ((FlBinMessageCommand)command).Header.device_id = deviceId;
                 ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
@@ -729,7 +755,11 @@ namespace FwLib.NetWpfApp
             {
                 command = new FlBinMessageCommand()
                 {
-                    MessageId = FlMessageId.ReadGpio
+                    MessageId = FlMessageId.ReadGpio,
+                    Arguments = new List<object>()
+                    {
+                        gpioNum
+                    }
                 };
                 ((FlBinMessageCommand)command).Header.device_id = deviceId;
                 ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
@@ -822,7 +852,11 @@ namespace FwLib.NetWpfApp
             {
                 command = new FlBinMessageCommand()
                 {
-                    MessageId = FlMessageId.ReadTemperature
+                    MessageId = FlMessageId.ReadTemperature,
+                    Arguments = new List<object>()
+                    {
+                        sensorNum
+                    }
                 };
                 ((FlBinMessageCommand)command).Header.device_id = deviceId;
                 ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
@@ -859,8 +893,7 @@ namespace FwLib.NetWpfApp
                             {
                                 if (result.Response.Arguments?.Count == 2)
                                 {
-                                    UInt16 temperatureValue = (UInt16)result.Response.Arguments[1];
-                                    response = $"R : {(byte)result.Response.Arguments[0]},{temperatureValue/10}.{temperatureValue%10}";
+                                    response = $"R : {(byte)result.Response.Arguments[0]},{(double)result.Response.Arguments[1]:0.##}";
                                 }
                                 else
                                 {
@@ -917,7 +950,11 @@ namespace FwLib.NetWpfApp
             {
                 command = new FlBinMessageCommand()
                 {
-                    MessageId = FlMessageId.ReadTempAndHum
+                    MessageId = FlMessageId.ReadTempAndHum,
+                    Arguments = new List<object>()
+                    {
+                        sensorNum
+                    }
                 };
                 ((FlBinMessageCommand)command).Header.device_id = deviceId;
                 ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
@@ -953,20 +990,16 @@ namespace FwLib.NetWpfApp
                             {
                                 if (result.Response.Arguments?.Count == 3)
                                 {
-                                    UInt16 temperatureValue = (UInt16)result.Response.Arguments[1];
-                                    UInt16 humidityValue = (UInt16)result.Response.Arguments[2];
-                                    //response = $"R : {(byte)result.Response.Arguments[0]},{temperatureValue / 10}.{temperatureValue % 10},";
-                                    response = string.Format("R : {0},{1}.{2},{3},{4}",
+                                    response = string.Format("R : {0},{1:0.##}.{2:0.##}",
                                         (byte)result.Response.Arguments[0],
-                                        temperatureValue / 10, temperatureValue % 10,
-                                        humidityValue / 10, humidityValue % 10
+                                        (double)result.Response.Arguments[1],
+                                        (double)result.Response.Arguments[1]
                                         );
                                 }
                                 else
                                 {
                                     response = "R : Invalid response(invalid argument count)";
                                 }
-                                
                             }
                             else
                             {
@@ -1018,7 +1051,11 @@ namespace FwLib.NetWpfApp
             {
                 command = new FlBinMessageCommand()
                 {
-                    MessageId = FlMessageId.ReadHumidity
+                    MessageId = FlMessageId.ReadHumidity,
+                    Arguments = new List<object>()
+                    {
+                        sensorNum
+                    }
                 };
                 ((FlBinMessageCommand)command).Header.device_id = deviceId;
                 ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
@@ -1054,8 +1091,7 @@ namespace FwLib.NetWpfApp
                             {
                                 if (result.Response.Arguments?.Count == 2)
                                 {
-                                    UInt16 temperatureValue = (UInt16)result.Response.Arguments[1];
-                                    response = $"R : {(byte)result.Response.Arguments[0]},{temperatureValue / 10}.{temperatureValue % 10}";
+                                    response = $"R : {(byte)result.Response.Arguments[0]},{(double)result.Response.Arguments[1]:0.##}";
                                 }
                                 else
                                 {
@@ -1104,6 +1140,179 @@ namespace FwLib.NetWpfApp
             }
         }
 
+        private void BootMode(uint deviceId, byte bootMode)
+        {
+            IFlMessage command = null;
+
+            if (_currentParserType == ParserType.Binary)
+            {
+                command = new FlBinMessageCommand()
+                {
+                    MessageId = FlMessageId.BootMode
+                };
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
+
+                command.Arguments = new List<object>()
+                {
+                    bootMode
+                };
+            }
+            else if (_currentParserType == ParserType.Text)
+            {
+                command = new FlTxtMessageCommand()
+                {
+                    MessageId = FlMessageId.BootMode,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString(),
+                        bootMode.ToString()
+                    }
+                };
+            }
+
+            if (command != null)
+            {
+                CommandResult result = _msgManager.BootMode(command);
+
+                LbMessageHistory.Items.Add($"S : Boot mode");
+
+                string response = string.Empty;
+                if (result != null)
+                {
+                    if (result.Response != null)
+                    {
+                        if (_currentParserType == ParserType.Binary)
+                        {
+                            if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
+                            {
+                                response = $"R : OK";
+                            }
+                            else
+                            {
+                                response = "R : Error";
+                            }
+                        }
+                        else if (_currentParserType == ParserType.Text)
+                        {
+                            if (result.Response.Arguments?.Count == 2)
+                            {
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
+                                {
+                                    response = $"R : OK";
+                                }
+                                else
+                                {
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
+                                }
+                            }
+                            else
+                            {
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
+                            }
+                        }
+                        else
+                        {
+                            response = "R : Invalid parser type";
+                        }
+                    }
+                    else
+                    {
+                        response = "R : No response";
+                    }
+                }
+                else
+                {
+                    response = "R : Command fail";
+                }
+
+                LbMessageHistory.Items.Add(response);
+            }
+        }
+
+        private void Reset(uint deviceId)
+        {
+            IFlMessage command = null;
+
+            if (_currentParserType == ParserType.Binary)
+            {
+                command = new FlBinMessageCommand()
+                {
+                    MessageId = FlMessageId.Reset
+                };
+                ((FlBinMessageCommand)command).Header.device_id = deviceId;
+                ((FlBinMessageCommand)command).Header.flag1.sequence_num = _sequenceNumber;
+            }
+            else if (_currentParserType == ParserType.Text)
+            {
+                command = new FlTxtMessageCommand()
+                {
+                    MessageId = FlMessageId.Reset,
+                    Arguments = new List<object>()
+                    {
+                        deviceId.ToString()
+                    }
+                };
+            }
+
+            if (command != null)
+            {
+                CommandResult result = _msgManager.Reset(command);
+
+                LbMessageHistory.Items.Add($"S : Reset");
+
+                string response = string.Empty;
+                if (result != null)
+                {
+                    if (result.Response != null)
+                    {
+                        if (_currentParserType == ParserType.Binary)
+                        {
+                            if (((FlBinMessageResponse)(result.Response)).Header.flag2.error == FlConstant.FL_OK)
+                            {
+                                response = $"R : OK";
+                            }
+                            else
+                            {
+                                response = "R : Error";
+                            }
+                        }
+                        else if (_currentParserType == ParserType.Text)
+                        {
+                            if (result.Response.Arguments?.Count == 2)
+                            {
+                                if ((string)result.Response.Arguments[1] == FlConstant.FL_OK.ToString())
+                                {
+                                    response = $"R : OK";
+                                }
+                                else
+                                {
+                                    response = $"R : {GetArgumentString(result.Response.Arguments)}";
+                                }
+                            }
+                            else
+                            {
+                                response = $"R : {GetArgumentString(result.Response.Arguments)}";
+                            }
+                        }
+                        else
+                        {
+                            response = "R : Invalid parser type";
+                        }
+                    }
+                    else
+                    {
+                        response = "R : No response";
+                    }
+                }
+                else
+                {
+                    response = "R : Command fail";
+                }
+
+                LbMessageHistory.Items.Add(response);
+            }
+        }
         #endregion
     }
 }

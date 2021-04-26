@@ -192,6 +192,32 @@ namespace FwLib.NetWpfApp.AppUtil
 
             return result;
         }
+
+        public CommandResult BootMode(IFlMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
+
+            return result;
+        }
+
+        public CommandResult Reset(IFlMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
+
+            return result;
+        }
         #endregion
 
         #region Private Methods

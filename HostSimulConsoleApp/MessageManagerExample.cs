@@ -412,8 +412,9 @@ namespace HostSimulConsoleApp
         private void PrintMessageManagerInfo()
         {
             Console.WriteLine("=========================================================");
-            Console.WriteLine($"Message type : {_flMsgMgr.MessageType}");
+            Console.WriteLine($"Message type : {_msgMgrSetting.MessageType}");
             Console.WriteLine($"COM port name : {_msgMgrSetting.SerialPortSetting?.PortName}");
+            Console.WriteLine($"Status : {_flMsgMgr.StartStatus}");
             Console.WriteLine("=========================================================");
         }
 

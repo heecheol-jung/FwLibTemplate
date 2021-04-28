@@ -735,7 +735,7 @@ namespace HostSimulConsoleApp
                 Arguments = new List<object>()
                 {
                     "1", // DeviceID
-                    "3", // GPIO number
+                    "1", // GPIO number
                     "1"  // GPIO value
                 }
             };

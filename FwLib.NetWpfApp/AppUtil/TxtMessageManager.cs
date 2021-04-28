@@ -1,4 +1,6 @@
-﻿using FwLib.Net;
+﻿using Fl.Net;
+using Fl.Net.Message;
+using Fl.Net.Parser;
 using log4net;
 using System;
 using System.Collections.Generic;
@@ -15,9 +17,9 @@ namespace FwLib.NetWpfApp.AppUtil
         private object _generalLock = new object();
         private Thread _messageProcessingThread = null;
         private bool _messageLoop = false;
-        private FwLibTxtParser _parser = new FwLibTxtParser();
-        private List<FwLibTxtMessageCommand> _commandQ = new List<FwLibTxtMessageCommand>();
-        private List<FwLibTxtMessageResponse> _responseQ = new List<FwLibTxtMessageResponse>();
+        private FlTxtParser _parser = new FlTxtParser();
+        private List<FlTxtMessageCommand> _commandQ = new List<FlTxtMessageCommand>();
+        private List<FlTxtMessageResponse> _responseQ = new List<FlTxtMessageResponse>();
         private ILog _logger = null;
         #endregion
 
@@ -95,96 +97,122 @@ namespace FwLib.NetWpfApp.AppUtil
         }
 
         // TODO : ReadHardwareVersion arguments.
-        public CommandResult ReadHardwareVersion(IFwLibMessage command)
+        public CommandResult ReadHardwareVersion(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
 
         // TODO : ReadFirmwareVersion arguments.
-        public CommandResult ReadFirmwareVersion(IFwLibMessage command)
+        public CommandResult ReadFirmwareVersion(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
 
         // TODO : ReadGpio arguments.
-        public CommandResult ReadGpio(IFwLibMessage command)
+        public CommandResult ReadGpio(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
 
         // TODO : WriteGpio arguments.
-        public CommandResult WriteGpio(IFwLibMessage command)
+        public CommandResult WriteGpio(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
 
-        public CommandResult ReadTemperature(IFwLibMessage command)
+        public CommandResult ReadTemperature(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
 
-        public CommandResult ReadHumidity(IFwLibMessage command)
+        public CommandResult ReadHumidity(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
 
-        public CommandResult ReadTemperatureAndHumidity(IFwLibMessage command)
+        public CommandResult ReadTemperatureAndHumidity(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibTxtMessageCommand)command);
-            result.Response = (FwLibTxtMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
+
+            return result;
+        }
+
+        public CommandResult BootMode(IFlMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
+
+            return result;
+        }
+
+        public CommandResult Reset(IFlMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFlMessage response = ProcessCommand((FlTxtMessageCommand)command);
+            result.Response = (FlTxtMessageResponse)response;
 
             return result;
         }
@@ -238,8 +266,8 @@ namespace FwLib.NetWpfApp.AppUtil
         {
             int bytesToRead;
             int i;
-            IFwLibMessage parsedMessage;
-            FwLibParseState parseState;
+            IFlMessage parsedMessage;
+            FlParseState parseState;
             byte[] data = new byte[128];
 
             _logger.Debug("InternalMessageProc started");
@@ -253,13 +281,13 @@ namespace FwLib.NetWpfApp.AppUtil
                     for (i = 0; i < bytesToRead; i++)
                     {
                         parseState = _parser.ParseResponseEvent(data[i], out parsedMessage);
-                        if (parseState == FwLibParseState.ParseOk)
+                        if (parseState == FlParseState.ParseOk)
                         {
                             lock (_generalLock)
                             {
                                 switch (parsedMessage.MessageCategory)
                                 {
-                                    case FwLibMessageCategory.Response:
+                                    case FlMessageCategory.Response:
                                         int commandCount = 0;
                                         lock (_generalLock)
                                         {
@@ -268,7 +296,7 @@ namespace FwLib.NetWpfApp.AppUtil
 
                                         if (commandCount > 0)
                                         {
-                                            FwLibTxtMessageResponse response = (FwLibTxtMessageResponse)parsedMessage;
+                                            FlTxtMessageResponse response = (FlTxtMessageResponse)parsedMessage;
                                             _responseQ.Add(response);
                                         }
                                         else
@@ -277,8 +305,8 @@ namespace FwLib.NetWpfApp.AppUtil
                                         }
                                         break;
 
-                                    case FwLibMessageCategory.Event:
-                                        FwLibTxtMessageEvent evt = (FwLibTxtMessageEvent)parsedMessage;
+                                    case FlMessageCategory.Event:
+                                        FlTxtMessageEvent evt = (FlTxtMessageEvent)parsedMessage;
                                         OnEventReceived?.Invoke(this, evt);
                                         break;
                                 }
@@ -291,14 +319,14 @@ namespace FwLib.NetWpfApp.AppUtil
             _logger.Debug("InternalMessageProc stopped");
         }
 
-        private IFwLibMessage ProcessCommand(FwLibTxtMessageCommand command)
+        private IFlMessage ProcessCommand(FlTxtMessageCommand command)
         {
             TimeSpan timeSpan;
             bool waitTimeExpired;
-            IFwLibMessage response = null;
-            IFwLibMessage message = (IFwLibMessage)command;
+            IFlMessage response = null;
+            IFlMessage message = (IFlMessage)command;
 
-            FwLibTxtPacketBuilder.BuildMessagePacket(ref message);
+            FlTxtPacketBuilder.BuildMessagePacket(ref message);
             lock (_generalLock)
             {
                 _commandQ.Add(command);
@@ -351,9 +379,9 @@ namespace FwLib.NetWpfApp.AppUtil
             return response;
         }
 
-        private FwLibTxtMessageResponse GetResponse(FwLibTxtMessageCommand command)
+        private FlTxtMessageResponse GetResponse(FlTxtMessageCommand command)
         {
-            FwLibTxtMessageResponse response = null;
+            FlTxtMessageResponse response = null;
             int count = 0;
             int i;
 

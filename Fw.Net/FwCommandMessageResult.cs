@@ -1,10 +1,12 @@
 ﻿using Fl.Net.Message;
+using System;
 
-namespace FwLib.NetWpfApp.AppUtil
+namespace Fw.Net
 {
-    public class CommandResult
+    public class FwCommandMessageResult
     {
         public IFlMessage Command { get; set; }
         public IFlMessage Response { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

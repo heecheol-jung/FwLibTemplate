@@ -1,4 +1,6 @@
-﻿using FwLib.Net;
+﻿using Fl.Net;
+using Fl.Net.Message;
+using Fl.Net.Parser;
 using log4net;
 using System;
 using System.Collections.Generic;
@@ -16,9 +18,9 @@ namespace FwLib.NetWpfApp.AppUtil
         private object _generalLock = new object();
         private Thread _messageProcessingThread = null;
         private bool _messageLoop = false;
-        private FwLibBinParser _parser = new FwLibBinParser();
-        private List<FwLibBinMessageCommand> _commandQ = new List<FwLibBinMessageCommand>();
-        private List<FwLibBinMessageResponse> _responseQ = new List<FwLibBinMessageResponse>();
+        private FlBinParser _parser = new FlBinParser();
+        private List<FlBinMessageCommand> _commandQ = new List<FlBinMessageCommand>();
+        private List<FlBinMessageResponse> _responseQ = new List<FlBinMessageResponse>();
         private ILog _logger = null;
         #endregion
 
@@ -54,7 +56,7 @@ namespace FwLib.NetWpfApp.AppUtil
                 OpenSerialPort(setting.ComSetting);
 
                 _messageLoop = true;
-                _parser.Role = FwLibParserRole.Host;
+                _parser.Role = FlParserRole.Host;
                 _messageProcessingThread = new Thread(new ThreadStart(InternalMessageProc))
                 {
                     Priority = ThreadPriority.Highest
@@ -97,96 +99,122 @@ namespace FwLib.NetWpfApp.AppUtil
         }
 
         // TODO : ReadHardwareVersion arguments.
-        public CommandResult ReadHardwareVersion(IFwLibMessage command)
+        public CommandResult ReadHardwareVersion(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
 
         // TODO : ReadFirmwareVersion arguments.
-        public CommandResult ReadFirmwareVersion(IFwLibMessage command)
+        public CommandResult ReadFirmwareVersion(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
 
         // TODO : ReadGpio arguments.
-        public CommandResult ReadGpio(IFwLibMessage command)
+        public CommandResult ReadGpio(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
 
         // TODO : WriteGpio arguments.
-        public CommandResult WriteGpio(IFwLibMessage command)
+        public CommandResult WriteGpio(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
 
-        public CommandResult ReadTemperature(IFwLibMessage command)
+        public CommandResult ReadTemperature(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
 
-        public CommandResult ReadHumidity(IFwLibMessage command)
+        public CommandResult ReadHumidity(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
 
-        public CommandResult ReadTemperatureAndHumidity(IFwLibMessage command)
+        public CommandResult ReadTemperatureAndHumidity(IFlMessage command)
         {
             CommandResult result = new CommandResult()
             {
                 Command = command
             };
 
-            IFwLibMessage response = ProcessCommand((FwLibBinMessageCommand)command);
-            result.Response = (FwLibBinMessageResponse)response;
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
+
+            return result;
+        }
+
+        public CommandResult BootMode(IFlMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
+
+            return result;
+        }
+
+        public CommandResult Reset(IFlMessage command)
+        {
+            CommandResult result = new CommandResult()
+            {
+                Command = command
+            };
+
+            IFlMessage response = ProcessCommand((FlBinMessageCommand)command);
+            result.Response = (FlBinMessageResponse)response;
 
             return result;
         }
@@ -240,8 +268,8 @@ namespace FwLib.NetWpfApp.AppUtil
         {
             int bytesToRead;
             int i;
-            IFwLibMessage parsedMessage;
-            FwLibParseState parseState;
+            IFlMessage parsedMessage;
+            FlParseState parseState;
             byte[] data = new byte[128];
 
             _logger.Debug("InternalMessageProc started");
@@ -255,13 +283,13 @@ namespace FwLib.NetWpfApp.AppUtil
                     for (i = 0; i < bytesToRead; i++)
                     {
                         parseState = _parser.Parse(data[i], out parsedMessage);
-                        if (parseState == FwLibParseState.ParseOk)
+                        if (parseState == FlParseState.ParseOk)
                         {
                             lock (_generalLock)
                             {
                                 switch (parsedMessage.MessageCategory)
                                 {
-                                    case FwLibMessageCategory.Response:
+                                    case FlMessageCategory.Response:
                                         int commandCount = 0;
                                         lock (_generalLock)
                                         {
@@ -270,7 +298,7 @@ namespace FwLib.NetWpfApp.AppUtil
 
                                         if (commandCount > 0)
                                         {
-                                            FwLibBinMessageResponse response = (FwLibBinMessageResponse)parsedMessage;
+                                            FlBinMessageResponse response = (FlBinMessageResponse)parsedMessage;
                                             _responseQ.Add(response);
                                         }
                                         else
@@ -279,8 +307,8 @@ namespace FwLib.NetWpfApp.AppUtil
                                         }
                                         break;
 
-                                    case FwLibMessageCategory.Event:
-                                        FwLibBinMessageEvent evt = (FwLibBinMessageEvent)parsedMessage;
+                                    case FlMessageCategory.Event:
+                                        FlBinMessageEvent evt = (FlBinMessageEvent)parsedMessage;
                                         OnEventReceived?.Invoke(this, evt);
                                         break;
                                 }
@@ -293,14 +321,14 @@ namespace FwLib.NetWpfApp.AppUtil
             _logger.Debug("InternalMessageProc stopped");
         }
 
-        private IFwLibMessage ProcessCommand(FwLibBinMessageCommand command)
+        private IFlMessage ProcessCommand(FlBinMessageCommand command)
         {
             TimeSpan timeSpan;
             bool waitTimeExpired;
-            IFwLibMessage response = null;
-            IFwLibMessage message = (IFwLibMessage)command;
+            IFlMessage response = null;
+            IFlMessage message = (IFlMessage)command;
 
-            FwLibBinPacketBuilder.BuildMessagePacket(ref message);
+            FlBinPacketBuilder.BuildMessagePacket(ref message);
             lock(_generalLock)
             {
                 _commandQ.Add(command);
@@ -353,9 +381,9 @@ namespace FwLib.NetWpfApp.AppUtil
             return response;
         }
 
-        private FwLibBinMessageResponse GetResponse(FwLibBinMessageCommand command)
+        private FlBinMessageResponse GetResponse(FlBinMessageCommand command)
         {
-            FwLibBinMessageResponse response = null;
+            FlBinMessageResponse response = null;
             int count = 0;
             int i;
 
@@ -372,7 +400,7 @@ namespace FwLib.NetWpfApp.AppUtil
             for (i = 0; i < count; i++)
             {
                 if ((_responseQ[i].MessageId == command.MessageId) &&
-                    (_responseQ[i].Header.SequenceNumber == command.Header.SequenceNumber))
+                    (_responseQ[i].Header.flag1.sequence_num == command.Header.flag1.sequence_num))
                 {
                     lock (_generalLock)
                     {
